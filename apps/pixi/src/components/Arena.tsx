@@ -37,6 +37,8 @@ const Arena = ({ socket }: any) => {
   // const { socket, socketUserId, socketAvatarId } = Socket();
   useEffect(() => {
     getuserAvatar();
+
+  
   }, []);
   // console.log(useBootStore.getState().ready);
 

@@ -140,21 +140,18 @@ const MainContainer = ({
         setIsBubbleVisible(false);
       }, bubbleTimer);
     };
+
     socket.on("other-avatar-move", handleOthersAvatarMove);
     socket.on("user-disconnected", handleUserDisconnected);
     socket.on("chat-message", handleChatMessage);
 
     return () => {
       socket.off("other-avatar-move", handleOthersAvatarMove);
-      socket.on("user-disconnected", handleUserDisconnected);
+      socket.off("user-disconnected", handleUserDisconnected);
       socket.off("chat-message", handleChatMessage);
     };
   }, [socket]); //  Your socket is created asynchronously, so when this effect runs:socket === null
   //So events never fireThe moment socket is created → listener is added.
-
-  useEffect(() => {
-    // console.log("usersAvatars", usersAvatars);
-  }, [usersAvatars]);
 
   const updateHeroPosition = useCallback((x: number, y: number) => {
     setHeroPosition({
@@ -167,9 +164,9 @@ const MainContainer = ({
     if (!userSprite) return null;
     const texure = Texture.from(userSprite);
 
-    console.log("Texure created", {
-      valid: texure.baseTexture.valid,
-    });
+    // console.log("Texure created", {
+    //   valid: texure.baseTexture.valid,
+    // });
 
     texure.baseTexture.once("loaded", () => {
       // at this point the image of avatar for user is finally loaded in browser
@@ -182,7 +179,12 @@ const MainContainer = ({
 
   const backgroundTexture = useMemo(() => {
     // if (!backgroundSprite) return null;
-    return Texture.from("/avatars/arena-bg.png");
+    const texure = Texture.from("/avatars/arena-bg.png");
+    texure.baseTexture.once("loaded", () => {
+      // console.log("map ready");
+      useBootStore.getState().markReady("PIXI");
+    });
+    return texure;
   }, []);
 
   return (

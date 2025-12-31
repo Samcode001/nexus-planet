@@ -17,8 +17,8 @@ COPY pnpm-lock.yaml .
 COPY turbo.json .
 
 # Monorepo source
-COPY packages packages
-COPY apps apps
+COPY packages/db packages/db
+COPY apps/http apps/http
 
 # Prisma build-time env
 ENV DATABASE_URL="file:./dev.db"

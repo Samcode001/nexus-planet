@@ -1,0 +1,43 @@
+services: 
+    nginx: 
+        image: nginx:alpine
+        container_name: nginx-proxy
+        ports:
+            - "80:80"
+        volumes:
+            - ./nginx/nginx.local.conf:/etc/nginx/nginx.conf:ro
+        depends_on:
+            - http
+            - socket
+
+    http:
+        container_name: http_api
+        build:
+             context: .
+             dockerfile: apps/http/Dockerfile
+        expose:
+             - "3000"
+        env_file:
+              - .env.example
+
+    socket:
+        container_name: socket_api
+        build:
+             context: .
+             dockerfile: apps/socket/Dockerfile
+        expose:
+               - "5000"
+        env_file:
+              - .env.example
+    redis:
+         image: redis:7-alpine
+         container_name: redis   
+         expose:
+            - "6379"
+         volumes: 
+            - redis-data:/data  
+         command: ["redis-server","--appendonly","yes"]
+
+volumes:
+       redis-data:
+

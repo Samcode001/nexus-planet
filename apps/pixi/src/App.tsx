@@ -1,5 +1,3 @@
-// import Experience from "./components/Arena";
-// import socket from "./helper/socket";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignUpPage from "./pages/SignUpPage";
 import SignInPage from "./pages/SignInPage";
@@ -12,14 +10,6 @@ import AvatarsPage from "./pages/AvatarsPage";
 import ArenaPage from "./pages/ArenaPage";
 
 function App() {
-  // const [count, setCount] = useState(0)
-
-  // useEffect(() => {
-  //   socket.on("connection", () => {
-  //     console.log(" A new user connected");
-  //   });
-  // }, []);
-
   return (
     <>
       <AuthProvider>

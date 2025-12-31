@@ -8,14 +8,15 @@ RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 COPY pnpm-workspace.yaml .
 COPY package.json .
 COPY pnpm-lock.yaml .
+COPY turbo.json .
 
 # Only socket app
 COPY apps/socket apps/socket
-
+COPY packages/redis packages/redis
 # Install only socket deps
-RUN pnpm install --filter socket...
+RUN pnpm install 
 
-RUN pnpm --filter socket build
+RUN pnpm  build
 
 EXPOSE 5000
 CMD ["node", "apps/socket/dist/index.js"]

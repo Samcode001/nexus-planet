@@ -83,7 +83,7 @@ const OtherAvatars = ({
     heroPixelX,
     heroPixelY
   );
-  console.log(isNearby, heroPixelX, heroPixelY);
+  // console.log(isNearby, heroPixelX, heroPixelY);
 
   const texture = useMemo(
     () => TextureImport.from(`/avatars/${AVATAR_IMAGE}.png`),

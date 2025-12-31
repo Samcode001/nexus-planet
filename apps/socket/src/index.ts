@@ -3,6 +3,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import redisClient from "@repo/redis";
 
 //  Load environment variables (important because this server is in a separate folder)
 dotenv.config();
@@ -13,16 +14,23 @@ const server = createServer(app);
 //  Initialize Socket.io with CORS so your frontend can connect
 export const io = new Server(server, {
   // path: "/socket", // we are doing this to sockit.io calls in this url "BASE_URL + PATH + "/?EIO=4&transport=websocket" but nginx must be bypasss so we need to set the path
-
   cors: {
     origin: process.env.SOCKET_CLIENT_ORIGIN,
     methods: ["GET", "POST"],
   },
 });
 
+// Helath check of redis
+redisClient.set("health", "ok");
+const value = await redisClient.get("health");
+console.log("Redis Health " + JSON.stringify(value));
+
 // Basic test route
 app.get("/", (_, res) => {
-  res.send("<h1>Socket Healthy</h1>");
+  res.send(`
+    <h1>Socket Healthy</h1>
+    <span>Redis:${value}</span>
+    `);
 });
 
 //  The SAME secret used in your HTTP server (access token)
@@ -69,19 +77,20 @@ Every time a client connects successfully:
 - socket.id = unique ID for this websocket session
 - socket.data.user = authenticated user (from JWT)
 */
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   const user = socket.data.user;
-
+  // console.log(user);
+  redisClient.set(`user:${user.id}:profile`, String(user.id));
   let date = new Date(Date.now());
-  console.log(
-    "A new user connected:",
-    "socketId =",
-    socket.id,
-    "| userId =",
-    user.id,
-    "| time =",
-    date.toISOString()
-  );
+  // console.log(
+  //   "A new user connected:",
+  //   "socketId =",
+  //   socket.id,
+  //   "| userId =",
+  //   user.id,
+  //   "| time =",
+  //   date.toISOString()
+  // );
 
   /*  
   =====================================================================
@@ -93,14 +102,27 @@ io.on("connection", (socket) => {
   - We attach userId to the movement (so others know WHO moved).
   - `socket.broadcast.emit` sends the update to all OTHER players.
   */
-  socket.on("move-avatar", (data) => {
+  socket.on("move-avatar", async (data) => {
     // data.userId = user.id; // attach real user ID from the token
+    // console.log("Data" + JSON.stringify(data)); // keys:id,username,x,y,direction,avatar
+    const { id, username, x, y, direction } = data;
+    await redisClient.hset(`user:${id}:position`, {
+      id,
+      username,
+      x: String(x),
+      y: String(y),
+      direction,
+    });
     socket.broadcast.emit("other-avatar-move", data);
   });
 
   socket.on("chat-message", (data) => {
     socket.broadcast.emit("chat-message", data);
   });
+
+  const lastPostion = await redisClient.hgetall(`user:${user.id}:position`);
+  // console.log(JSON.stringify(lastPostion));
+  socket.emit("last-position", lastPostion);
 
   /*  
   =====================================================================
