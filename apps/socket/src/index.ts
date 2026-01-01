@@ -124,7 +124,10 @@ io.on("connection", async (socket) => {
 
   const lastPostion = await redisClient.hgetall(`user:${user.id}:position`);
   // console.log(JSON.stringify(lastPostion));
-  socket.emit("last-position", lastPostion);
+  if (Object.keys(lastPostion).length > 0){
+      console.log("last pos sent")
+    socket.emit("last-position", lastPostion);
+  }
 
   /*  
   =====================================================================
@@ -139,7 +142,7 @@ io.on("connection", async (socket) => {
   socket.on("disconnect", async () => {
     console.log("User disconnected:", user.id);
     socket.broadcast.emit("user-disconnected", user.id);
-    await redisClient.del(`user:${user.id}:position`);
+    // await redisClient.del(`user:${user.id}:position`);
   });
 });
 
