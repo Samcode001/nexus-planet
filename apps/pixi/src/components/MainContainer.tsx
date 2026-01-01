@@ -8,7 +8,7 @@ import {
 } from "react";
 import { Container, Sprite } from "@pixi/react";
 import HeroGrid from "./HeroGrid";
-import map from "../assets/tilemap.png";
+// import map from "../assets/tilemap.png";
 import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE } from "../constants/game-world";
 import OtherAvatars from "./OtherAvatars";
 import type { Direction } from "../types/common";
@@ -161,9 +161,9 @@ const MainContainer = ({
   }, []);
 
   const heroTexture = useMemo(() => {
+    // console.log(userSprite);
     if (!userSprite) return null;
     const texure = Texture.from(userSprite);
-
     // console.log("Texure created", {
     //   valid: texure.baseTexture.valid,
     // });
@@ -178,8 +178,19 @@ const MainContainer = ({
   }, [userSprite]);
 
   const backgroundTexture = useMemo(() => {
-    // if (!backgroundSprite) return null;
-    const texure = Texture.from("/avatars/arena-bg.png");
+    let backgroundSprite = "/avatars/arena-bg.png";
+    const texure = Texture.from(backgroundSprite);
+    // console.log(texure);
+    texure.baseTexture.once("loaded", () => {
+      // console.log("map ready");
+      useBootStore.getState().markReady("PIXI");
+    });
+    return texure;
+  }, []);
+  const mapTexture = useMemo(() => {
+    let mapSprite = "/tilemap.png";
+    const texure = Texture.from(mapSprite);
+    // console.log(texure);
     texure.baseTexture.once("loaded", () => {
       // console.log("map ready");
       useBootStore.getState().markReady("PIXI");
@@ -191,7 +202,7 @@ const MainContainer = ({
     <>
       <Container scale={canvasSize.scale}>
         <Sprite
-          image={map}
+          // image={map}
           width={GAME_WIDTH}
           height={GAME_HEIGHT}
           texture={backgroundTexture}
@@ -199,9 +210,10 @@ const MainContainer = ({
 
         <Camera heroPosition={heroPosition} canvasSize={canvasSize}>
           <Sprite
-            image={map}
+            // image={map}
             width={GAME_WIDTH}
             height={GAME_HEIGHT}
+            texture={mapTexture}
             // scale={1}
             // x={OFFSET_X}
             // y={OFFSET_Y}

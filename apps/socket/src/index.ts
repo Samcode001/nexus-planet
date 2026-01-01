@@ -80,7 +80,7 @@ Every time a client connects successfully:
 io.on("connection", async (socket) => {
   const user = socket.data.user;
   // console.log(user);
-  redisClient.set(`user:${user.id}:profile`, String(user.id));
+  // redisClient.set(`user:${user.id}:profile`, String(user.id));
   let date = new Date(Date.now());
   // console.log(
   //   "A new user connected:",
@@ -106,13 +106,15 @@ io.on("connection", async (socket) => {
     // data.userId = user.id; // attach real user ID from the token
     // console.log("Data" + JSON.stringify(data)); // keys:id,username,x,y,direction,avatar
     const { id, username, x, y, direction } = data;
-    await redisClient.hset(`user:${id}:position`, {
-      id,
-      username,
-      x: String(x),
-      y: String(y),
-      direction,
-    });
+    if (direction) {
+      await redisClient.hset(`user:${id}:position`, {
+        id,
+        username,
+        x: String(x),
+        y: String(y),
+        direction,
+      });
+    }
     socket.broadcast.emit("other-avatar-move", data);
   });
 
@@ -134,9 +136,10 @@ io.on("connection", async (socket) => {
   - loses connection
   - refreshes page
   */
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     console.log("User disconnected:", user.id);
     socket.broadcast.emit("user-disconnected", user.id);
+    await redisClient.del(`user:${user.id}:position`);
   });
 });
 

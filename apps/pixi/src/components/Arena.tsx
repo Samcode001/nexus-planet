@@ -11,7 +11,7 @@ import type { RootState } from "../redux/store";
 
 const Arena = ({ socket }: any) => {
   const canvasSize = useDimensions();
-  const [userSprite, setUserSprite] = useState<string>("");
+  const [userSprite, setUserSprite] = useState<string>("/avatars/hero.png");
   const [userChat, setUserchat] = useState("");
   const [userChatVisible, setUserchatVisible] = useState(false);
 
@@ -28,7 +28,7 @@ const Arena = ({ socket }: any) => {
 
   const getuserAvatar = async () => {
     const res = await axiosAuth.get("/avatar");
-    if (res.status === 200) {
+    if (res.status === 200 && res.data.avatarId) {
       let avatar = `/avatars/${res.data.avatarId}.png`;
       setUserSprite(avatar);
     }

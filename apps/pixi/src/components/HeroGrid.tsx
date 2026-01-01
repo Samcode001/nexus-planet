@@ -142,13 +142,18 @@ const HeroGrid = ({
     if (!socket) return;
     const handleLastPosition = (data: any) => {
       // console.log("last position on socket repsone", data);
+    updateHeroPosition(position.current.x, position.current.y);
+
+      if (Object.keys(data).length === 0 || data.x === "null") return;
+
       position.current = {
         x: Number(data.x),
         y: Number(data.y),
       };
       currentDirection.current = data.direction;
       setIsSpawned(true);
-      updateHeroPosition(position.current.x, position.current.y);
+      if (position.current.x && position.current.y)
+        updateHeroPosition(position.current.x, position.current.y);
       // console.log("position on socket repsone", position.current);
     };
 

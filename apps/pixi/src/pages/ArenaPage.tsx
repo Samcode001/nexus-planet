@@ -81,7 +81,7 @@ const ArenaPage = () => {
       setAvatarLoading(true);
     }
     // console.log(useBootStore.getState().ready.AVATARS);
-  }, [avatarReady]);
+  }, [avatarReady, pixiReady]);
 
   return (
     <>

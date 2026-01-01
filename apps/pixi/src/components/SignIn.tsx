@@ -11,6 +11,8 @@ import {
   ThemeProvider,
   Link,
 } from "@mui/material";
+import { IoEyeOutline } from "react-icons/io5";
+import { IoEyeOffOutline } from "react-icons/io5";
 
 const pixelTheme = createTheme({
   typography: {
@@ -134,6 +136,7 @@ const SignIn = () => {
   const [invalidError, setInvalidError] = useState("");
   const [error, setError] = useState<{ [key: string]: string[] }>({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -153,10 +156,12 @@ const SignIn = () => {
       console.error(err);
       if (err.response?.data?.errors) {
         setError(err.response.data.errors);
+        setTimeout(()=>setError({}),5000)
         setLoading(false);
       }
       if (err.response?.data?.message) {
         setInvalidError(err.response.data.message);
+        setTimeout(() => setInvalidError(""), 5000);
         setLoading(false);
       }
     }
@@ -267,17 +272,44 @@ const SignIn = () => {
               error={!!error}
             />
 
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              margin="normal"
-              value={userData.password}
-              onChange={(e) =>
-                setUserData({ ...userData, password: e.target.value })
-              }
-              error={!!error}
-            />
+            <Box sx={{ position: "relative" }}>
+              <TextField
+                fullWidth
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                margin="normal"
+                value={userData.password}
+                onChange={(e) =>
+                  setUserData({ ...userData, password: e.target.value })
+                }
+                error={!!error}
+              />
+              {showPassword ? (
+                <IoEyeOffOutline
+                  style={{
+                    position: "absolute",
+                    top: "35px",
+                    right: "20px",
+                    cursor: "pointer",
+                  }}
+                  size={"25px"}
+                  color="#d4ff00cb"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                />
+              ) : (
+                <IoEyeOutline
+                  style={{
+                    position: "absolute",
+                    top: "35px",
+                    right: "20px",
+                    cursor: "pointer",
+                  }}
+                  size={"25px"}
+                  color="#d4ff00cb"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                />
+              )}
+            </Box>
 
             <Box sx={{ textAlign: "center", mt: 3 }}>
               <Button type="submit">
