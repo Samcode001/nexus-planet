@@ -8,6 +8,7 @@ import { Container } from "@mui/material";
 import ChatInput from "./ChatInput";
 import { useSelector } from "react-redux";
 import type { RootState } from "../redux/store";
+import { useAppDispatch } from "../redux/hook";
 
 const Arena = ({ socket }: any) => {
   const canvasSize = useDimensions();
@@ -15,6 +16,8 @@ const Arena = ({ socket }: any) => {
   const [userChat, setUserchat] = useState("");
   const [userChatVisible, setUserchatVisible] = useState(false);
 
+ const dispatch = useAppDispatch();
+  const isNearby = useSelector((state: RootState) => state.proximity.isNearby);
   const socketAvatarId = useSelector(
     (state: RootState) => state.socket.avatarId
   )!;
@@ -47,7 +50,7 @@ const Arena = ({ socket }: any) => {
       const isTyping =
         document.activeElement instanceof HTMLInputElement ||
         document.activeElement instanceof HTMLTextAreaElement ||
-        document.activeElement?.getAttribute("contenteditable") === "true";
+        document.activeElement?.getAttribute("contenteditable") === "true";   // done this beacuse dont wnat to close the cahtbox when you write c in input box
       // console.log("chat open");
       if (isTyping) return;
 
@@ -86,6 +89,8 @@ const Arena = ({ socket }: any) => {
             chatInput={chatInput}
             userChat={userChat}
             userChatVisible={userChatVisible}
+            dispatch={dispatch}
+            isNearby={isNearby}
           />
         </Stage>
         <ChatInput

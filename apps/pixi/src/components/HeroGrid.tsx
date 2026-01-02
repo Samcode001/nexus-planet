@@ -17,6 +17,8 @@ import {
 import { Container, Sprite, Text, useTick } from "@pixi/react";
 import { useControls } from "../hook/useControls";
 import ChatBubble from "../helper/chatBubble";
+// import { useAppDispatch } from "../redux/hook";
+import { setIsNearby } from "../redux/Proximity/proximitySlice";
 interface IHeroProps {
   texture: Texture | null;
   updateHeroPosition: (x: number, y: number) => void;
@@ -27,6 +29,8 @@ interface IHeroProps {
   setNearbyPlayers: React.Dispatch<React.SetStateAction<string[]>>;
   userChat: string;
   userChatVisible: boolean;
+  dispatch: any;
+  isNearby: boolean;
 }
 
 const textStyle = new TextStyle({
@@ -43,6 +47,8 @@ const HeroGrid = ({
   userChat,
   userChatVisible,
   socket,
+  dispatch,
+  isNearby,
 }: IHeroProps) => {
   const [isSpawned, setIsSpawned] = useState(false);
   const position = useRef({
@@ -64,7 +70,8 @@ const HeroGrid = ({
   });
 
   // ------------------- Chat Codes ----------------------start
-  const [isNearby, setIsNearby] = useState(false);
+  // const [isNearby, setIsNearby] = useState(false);
+ 
 
   const isWithinRange = (
     { x1, y1 }: { x1: number; y1: number },
@@ -122,9 +129,10 @@ const HeroGrid = ({
     setNearbyPlayers(nearbyUsers);
     // console.log(nearbyUsers);
     if (nearbyUsers.length > 0) {
-      setIsNearby(true);
+      // setIsNearby(true);
+      dispatch(setIsNearby(true));
     } else {
-      setIsNearby(false);
+      dispatch(setIsNearby(false));
     }
   };
 

@@ -29,6 +29,8 @@ interface IMainContainerProps {
   chatInput: string;
   userChat: string;
   userChatVisible: boolean;
+  dispatch: any;
+  isNearby: boolean;
 }
 
 interface IAvatar {
@@ -50,6 +52,8 @@ const MainContainer = ({
   socketUsername,
   userChat,
   userChatVisible,
+  dispatch,
+  isNearby,
 }: PropsWithChildren<IMainContainerProps>) => {
   const [usersAvatars, setUsersAvatars] = useState<IAvatar[]>([]);
   const [currentDirection, setCurrentDirection] = useState<Direction | null>(
@@ -229,6 +233,8 @@ const MainContainer = ({
             setNearbyPlayers={setNearbyPlayers}
             userChat={userChat}
             userChatVisible={userChatVisible}
+            dispatch={dispatch}
+            isNearby={isNearby}
           />
 
           {usersAvatars
@@ -248,6 +254,7 @@ const MainContainer = ({
                   isBubbleVisible={isBubbleVisible}
                   chatMessageId={chatMessageId}
                   heroPosition={heroPosition}
+                  isNearby={isNearby}
                 />
               );
             })}

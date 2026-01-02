@@ -122,10 +122,22 @@ io.on("connection", async (socket) => {
     socket.broadcast.emit("chat-message", data);
   });
 
+  socket.on("voice-offer", (offer) => {
+    socket.broadcast.emit("voice-offer", offer);
+  });
+
+  socket.on("voice-ice", (candidate) => {
+    socket.broadcast.emit("voice-ice", candidate);
+  });
+
+  socket.on("voice-answer", (answer) => {
+    socket.broadcast.emit("voice-answer", answer);
+  });
+
   const lastPostion = await redisClient.hgetall(`user:${user.id}:position`);
   // console.log(JSON.stringify(lastPostion));
-  if (Object.keys(lastPostion).length > 0){
-      console.log("last pos sent")
+  if (Object.keys(lastPostion).length > 0) {
+    console.log("last pos sent");
     socket.emit("last-position", lastPostion);
   }
 

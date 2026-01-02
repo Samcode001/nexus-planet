@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import socketReducer from "./socket/socketSlice";
+import proximityReducer from "./Proximity/proximitySlice";
 
 export const store = configureStore({
   reducer: {
     socket: socketReducer,
+    proximity: proximityReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

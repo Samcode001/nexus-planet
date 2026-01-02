@@ -1,30 +1,64 @@
-# Meta‑Collab 🚀
+# Nexus Planet
 
 A **real‑time multiplayer collaboration / metaverse platform** built as a **production‑ready monorepo**.
-Meta‑Collab focuses on **low‑latency real‑time interaction**, scalable backend services, and modern DevOps practices.
+Nexus Planet focuses on **low‑latency real‑time interaction**, scalable backend services, and modern DevOps practices.
 
 ---
 
-## 🧠 What is Meta‑Collab?
+## What is Nexus Planet?
 
-Meta‑Collab is a WebSocket‑heavy real‑time application where multiple users can:
+Nexus Planet is a **real-time multiplayer environment** where multiple users can:
 
 - Join shared virtual rooms
 - Move avatars in real time
-- Interact with other users instantly
-- Maintain persistent state using a database
+- See other players instantly
+- Talk using **proximity-based voice chat (WebRTC)**
+- Maintain persistent player state across sessions
 
-The project is designed to **simulate real‑world system design challenges** such as:
+This project is designed to simulate **real-world system design challenges**, including:
 
-- Real‑time networking
-- State synchronization
-- Backend scalability
-- Monorepo architecture
-- Dockerized deployment
+- Real-time state synchronization
+- Server-authoritative movement
+- WebSocket scalability
+- WebRTC audio signaling
+- Monorepo + Docker-based deployment
 
 ---
 
-## 🖼️ Screenshots / Demo
+## Core Features
+
+### Real-Time Multiplayer
+
+- Bi-directional WebSocket communication
+- Server-authoritative movement
+- Redis-backed last-known position caching
+- Persistent player state via PostgreSQL
+
+### Avatar System
+
+- Avatar selection & persistence
+- Real-time movement broadcast
+- X/Y tile-based positioning
+
+### Proximity Voice Chat (WebRTC)
+
+- Peer-to-peer audio using WebRTC
+- Socket-based signaling (offer / answer / ICE)
+- Push-to-Talk (hold key to speak)
+- Mic stream toggling without renegotiation
+- Designed for future spatial audio attenuation
+
+### Production-Focused Architecture
+
+- Separate HTTP, WebSocket, and frontend services
+- Prisma ORM with PostgreSQL
+- Redis for real-time state & caching
+- Dockerized monorepo builds
+- Nginx reverse proxy (HTTPS-ready)
+
+---
+
+## Screenshots / Demo
 
 ### Lobby / Room View
 
@@ -45,55 +79,47 @@ The project is designed to **simulate real‑world system design challenges** su
 </p>
 ---
 
-## 🏗️ Architecture Overview
-
-> _High‑level overview (diagram can be added later)_
+## Architecture Overview
 
 ```
-Frontend (React + PixiJS)
-        |
-        | HTTP (REST)
-        v
-   HTTP Server (Express)
-        |
-        | WebSocket Events
-        v
-   WS Server (Socket / WS)
-        |
-        | Cache / Pub‑Sub
-        v
-   Database (PostgreSQL via Prisma)
+             ┌──────────────────┐
+             │   PixiJS Client   │
+             │  (React + Vite)   │
+             └────────▲─────────┘
+                      │
+      REST (Auth/Data) │ WebSocket (State)
+                      │ WebRTC (Audio)
+                      ▼
+    ┌──────────────────────────────┐
+    │   Node.js Backend (Monorepo) │
+    │                              │
+    │  ┌────────────┐  ┌────────┐  │
+    │  │ HTTP API   │  │ Socket │  │
+    │  │ (Express)  │  │ Server │  │
+    │  └────▲──────┘  └────▲───┘   │
+    │       │               │      │
+    │       ▼               ▼      │
+    │  PostgreSQL        Redis     │
+    │   (Prisma)     (Realtime)    │
+    └──────────────────────────────┘
 
-
-┌────────────┐
-│  PixiJS    │  ← Frontend (Canvas-based 2D rendering)
-│  Frontend  │
-└─────▲──────┘
-      │ WebSocket (bi-directional)
-      ▼
-┌────────────┐
-│ Node.js +  │  ← Real-time game server
-│ Socket.io  │
-└─────▲──────┘
-      │
-      └── PostgreSQL (persistent state)
-           via Prisma ORM
 
 ```
 
 ---
 
-## 📦 Monorepo Structure
+## Monorepo Structure
 
 ```
 project/
 ├── apps/
 │   ├── pixi/        # React + PixiJS client
 │   ├── http/            # REST API server
-│   └── ws/              # WebSocket server
+│   └── ws/              # WebSocket + WebRTC signaling server
 │
 ├── packages/
 │   └── db/              # Prisma database client
+|   └── redis/           # Redis client
 │
 ├── pnpm-workspace.yaml
 ├── turbo.json
@@ -102,7 +128,7 @@ project/
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 
@@ -128,9 +154,9 @@ project/
 
 ---
 
-## 🚀 Getting Started (Local Development)
+## Getting Started (Local Development)
 
-### 1️⃣ Prerequisites
+### 1️ Prerequisites
 
 - Node.js ≥ 18
 - PNPM
@@ -138,7 +164,7 @@ project/
 
 ---
 
-### 2️⃣ Install Dependencies
+### 2️ Install Dependencies
 
 ```bash
 pnpm install
@@ -146,7 +172,7 @@ pnpm install
 
 ---
 
-### 3️⃣ Environment Variables
+### 3️ Environment Variables
 
 Create environment files:
 
@@ -155,11 +181,11 @@ cp .env.example .env
 cp .env.ws.example .env.ws
 ```
 
-> ⚠️ Do not commit real secrets
+> Do not commit real secrets
 
 ---
 
-### 4️⃣ Build Packages
+### 4️ Build Packages
 
 ```bash
 pnpm --filter @repo/db build
@@ -169,7 +195,7 @@ pnpm --filter ws build
 
 ---
 
-### 5️⃣ Start Services
+### 5️ Start Services
 
 ```bash
 pnpm --filter http start
@@ -179,7 +205,7 @@ pnpm --filter frontend dev
 
 ---
 
-## 🐳 Docker Setup
+## Docker Setup
 
 To run the entire stack using Docker:
 
@@ -198,7 +224,7 @@ This will start:
 
 ---
 
-## 🌐 Deployment Strategy
+## Deployment Strategy
 
 ### Recommended (Early Stage)
 
@@ -214,7 +240,7 @@ This will start:
 
 ---
 
-## 🧪 Testing (Planned)
+## Testing (Planned)
 
 - Unit tests for core logic
 - Integration tests for APIs
@@ -222,7 +248,7 @@ This will start:
 
 ---
 
-## 📌 Roadmap
+## Roadmap
 
 - [ ] Improve avatar movement reconciliation
 - [ ] Add proximity chat
@@ -232,7 +258,7 @@ This will start:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome!
 
@@ -243,17 +269,17 @@ Contributions are welcome!
 
 ---
 
-## 📄 License
+## License
 
 MIT License
 
 ---
 
-## 🙋 Author
+## Author
 
 **Himanshu Jaiswal**
 Full‑Stack Developer | Real‑Time Systems Enthusiast
 
 ---
 
-> ⭐ If you like this project, consider starring the repo!
+> If you like this project, consider starring the repo!

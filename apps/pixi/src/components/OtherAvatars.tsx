@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   ANIMATION_SPEED,
   MOVE_SPEED,
-  TILE_SIZE,
+  // TILE_SIZE,
   // TILE_SIZE,
 } from "../constants/game-world";
 import type { Direction } from "../types/common";
@@ -31,6 +31,7 @@ interface IHeroProps {
   isBubbleVisible: boolean;
   chatMessageId: string;
   heroPosition: { x: number; y: number };
+  isNearby: boolean;
   //   updateHeroPosition: (x: number, y: number) => void;
 }
 
@@ -55,7 +56,8 @@ const OtherAvatars = ({
   chatMessage,
   isBubbleVisible,
   chatMessageId,
-  heroPosition,
+  // heroPosition,
+  isNearby
 }: IHeroProps) => {
   const avatar_position = useRef({
     x: AVATAR_X_POS,
@@ -66,23 +68,23 @@ const OtherAvatars = ({
   const isMoving = useRef(false);
 
   // const isNearby = nearbyPlayers.includes(avatarId);
-  const isWithinRange = (x1: number, y1: number, x2: number, y2: number) => {
-    const dx = x1 - x2;
-    const dy = y1 - y2;
-    return Math.sqrt(dx * dx + dy * dy) < 120; // same threshold as yours
-  };
+  // const isWithinRange = (x1: number, y1: number, x2: number, y2: number) => {
+  //   const dx = x1 - x2;
+  //   const dy = y1 - y2;
+  //   return Math.sqrt(dx * dx + dy * dy) < 120; // same threshold as yours
+  // };
 
   // compute hero pixel coords from heroPosition (tile -> pixel)
-  const heroPixelX = heroPosition.x * TILE_SIZE;
-  const heroPixelY = heroPosition.y * TILE_SIZE;
+  // const heroPixelX = heroPosition.x * TILE_SIZE;
+  // const heroPixelY = heroPosition.y * TILE_SIZE;
 
   // avatar_position.current contains avatar pixel coords already
-  const isNearby = isWithinRange(
-    avatar_position.current.x,
-    avatar_position.current.y,
-    heroPixelX,
-    heroPixelY
-  );
+  // const isNearby = isWithinRange(
+  //   avatar_position.current.x,
+  //   avatar_position.current.y,
+  //   heroPixelX,
+  //   heroPixelY
+  // );
   // console.log(isNearby, heroPixelX, heroPixelY);
 
   const texture = useMemo(
