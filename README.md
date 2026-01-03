@@ -271,7 +271,9 @@ Contributions are welcome!
 
 ## License
 
-MIT License
+This project is source-available for learning and evaluation only.
+Commercial use, redistribution, or portfolio use is not permitted
+without explicit permission from the author.
 
 ---
 
