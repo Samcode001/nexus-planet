@@ -8,8 +8,8 @@ import {
 import type { Direction, IAvatar, IPosition } from "../types/common";
 
 export const calcluateDimesions = () => {
-  const windowWidth = window.innerWidth * 0.97;
-  const windowHeight = window.innerHeight * 0.97;
+  const windowWidth = window.innerWidth;
+  const windowHeight = window.innerHeight * 0.99;
 
   const scale = Math.min(windowHeight / GAME_HEIGHT, windowWidth / GAME_WIDTH); // its for how zoomed the image should be
   const height = GAME_HEIGHT * scale;
@@ -40,6 +40,27 @@ export const calculateNewTarget = (
       (y / TILE_SIZE) * TILE_SIZE +
       (direction === "UP" ? -TILE_SIZE : direction === "DOWN" ? TILE_SIZE : 0),
   };
+};
+
+export const calculateNewTargetDiagonal = (
+  x: number,
+  y: number,
+  direction: Direction
+) => {
+  let dx = 0;
+  let dy = 0;
+
+  if (direction === "UP") dy -= 1;
+  if (direction === "DOWN") dy += 1;
+  if (direction === "RIGHT") dx += 1;
+  if (direction === "LEFT") dx -= 1;
+
+  const magiun = Math.sqrt(dx * dx + dy * dy);
+  if (magiun > 0) {
+    dx = dx / magiun;
+    dy = dy / magiun;
+  }
+  return { x: x + dx, y: y + dy };
 };
 
 export const checkCanMove = (target: IPosition) => {

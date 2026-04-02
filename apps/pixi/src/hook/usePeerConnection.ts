@@ -1,21 +1,36 @@
 import { useRef } from "react";
 import type { Socket } from "socket.io-client";
 
-const usePeerConnection = (socket: Socket,pcRef: any) => {
+const usePeerConnection = (socket: Socket, pcRef: any) => {
   const micTrackRef = useRef<MediaStreamTrack | null>(null);
   // const audioInitializeRef = useRef<boolean>(false);
   const audioSenderRef = useRef<RTCRtpSender | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const initMic = async () => {
+  const initMic = async (providedStream?: MediaStream) => {
+    // already initialized
     if (micTrackRef.current) return;
-    const stream = await navigator.mediaDevices.getUserMedia({
-      // gets the acces from the user browser
-      audio: true,
-    });
+
+    let stream: MediaStream;
+
+    if (providedStream) {
+      stream = providedStream;
+    } else {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    }
+
+    const track = stream.getAudioTracks()[0];
+
+    // runtime safety guard
+    if (!track) {
+      throw new Error("No audio track available in MediaStream");
+    }
+
     streamRef.current = stream;
-    micTrackRef.current = stream.getAudioTracks()[0]; // add stream tot he pipe
-    micTrackRef.current.enabled = false;
+    micTrackRef.current = track;
+
+    // TS-safe (track is guaranteed non-null here)
+    track.enabled = false;
   };
 
   const getPeerConnection = async (userId: string) => {
@@ -45,22 +60,24 @@ const usePeerConnection = (socket: Socket,pcRef: any) => {
     return pc;
   };
 
-  const hanldeAudio = async (userId: string) => {
+  const hanldeAudio = async (userId: string, userStream: any) => {
     // this si sending offer (sending audio over webrtc pipline via help of socket signaling)
     if (!socket) return;
-    if (!micTrackRef.current) await initMic();
-    const pc = await getPeerConnection(userId);
-    if (!pc) return;
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
+    if (!micTrackRef.current) await initMic(userStream);
 
-    socket.emit("voice-offer", { offer, userId });
+    socket.emit("voice-call-offer", { userId });
+    // const pc = await getPeerConnection(userId);
+    // if (!pc) return;
+    // const offer = await pc.createOffer();
+    // await pc.setLocalDescription(offer);
+
+    // socket.emit("voice-offer", { offer, userId });
   };
 
   const handleIncomingAudio = async ({ offer, userId }: any) => {
     if (!socket) return;
     // if (pcRef.current) pcRef.current.close();
-     console.log("offered")
+    console.log("offered");
     if (!micTrackRef.current) await initMic();
     // const pc = new RTCPeerConnection({
     //   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -112,7 +129,7 @@ const usePeerConnection = (socket: Socket,pcRef: any) => {
   const startTalking = async () => {
     if (micTrackRef.current) {
       micTrackRef.current.enabled = true;
-    //   console.log("mic on");
+      //   console.log("mic on");
     }
   };
 
@@ -120,7 +137,7 @@ const usePeerConnection = (socket: Socket,pcRef: any) => {
     if (micTrackRef.current) {
       micTrackRef.current.enabled = false;
       // await audioSenderRef.current.replaceTrack(null);
-    //   console.log("mic off");
+      //   console.log("mic off");
     }
   };
 

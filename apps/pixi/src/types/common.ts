@@ -14,3 +14,9 @@ export interface IAvatar {
   direction: Direction;
   avatar: string;
 }
+
+export type selectedAvatar = {
+  id: string;
+  username: string;
+  avatarId: string;
+} | null;

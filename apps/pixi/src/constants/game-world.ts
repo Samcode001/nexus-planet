@@ -8,9 +8,9 @@ export const GAME_HEIGHT = TILE_SIZE * ROWS;
 // export const OFFSET_X = TILE_SIZE
 // export const OFFSET_Y = TILE_SIZE / 2
 
-export const MOVE_SPEED = 0.04;
-export const ANIMATION_SPEED = 0.35;
+export const MOVE_SPEED = 0.05;
+export const ANIMATION_SPEED = 0.45;
 export const DEFAULT_X_POS = TILE_SIZE * 10;
 export const DEFAULT_Y_POS = TILE_SIZE * 18;
 
-export const ZOOM = 2;
+export const ZOOM = 3;

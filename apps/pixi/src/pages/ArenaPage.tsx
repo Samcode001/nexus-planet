@@ -10,7 +10,7 @@ import { useAxiosAuth } from "../api/axiosClient";
 // import { setSocketData } from "../redux/socket/socketSlice";
 import type { RootState } from "../redux/store";
 import { useSelector } from "react-redux";
-import GameNavbar from "../components/GameNavbar";
+// import GameNavbar from "../components/GameNavbar";
 import { useBootStore } from "../store/bootstore";
 import { Box } from "@mui/material";
 import PlanetOverlay from "./ArenaOverlay";
@@ -27,7 +27,17 @@ const ArenaPage = () => {
   const USER_ID = useSelector((state: RootState) => state.socket.userId);
 
   const [avatarLaoding, setAvatarLoading] = useState(false);
+  const [mobileView, setMobileView] = useState(false);
+  const [isUserPermission, setIsUserPermisssion] = useState({
+    permission: false,
+    userStream: null,
+  });
+  const [offerVisible, setOfferVisible] = useState(false);
+
   const socket = useSelector((state: RootState) => state.socket.socket);
+  const isMobileView = useSelector(
+    (state: RootState) => state.proximity.isMobileView,
+  );
 
   const avatarReady = useBootStore((state) => state.ready.AVATARS);
   const pixiReady = useBootStore((state) => state.ready.PIXI);
@@ -53,6 +63,11 @@ const ArenaPage = () => {
       await pc.addIceCandidate(candidate);
     });
 
+    socket.on("voice-call-offer", async ({ userId }) => {
+      setOfferVisible(true);
+      console.log(userId);
+    });
+
     return () => {
       socket.off("voice-offer");
       socket.off("voice-answer");
@@ -66,9 +81,16 @@ const ArenaPage = () => {
 
     (async () => {
       try {
-        await hanldeAudio(USER_ID!);
+        // alert("want to make peer conn");
+        if (isUserPermission.permission) {
+          console.log("user permission gave",USER_ID);
+
+          // await hanldeAudio(USER_ID!, isUserPermission.userStream);
+        }
+        // else
+        //   console.log("Not permissiond")
       } catch (error) {
-        console.log("Error on making peer connection");
+        console.log("Error on making peer connection" + error);
       }
     })();
 
@@ -79,10 +101,11 @@ const ArenaPage = () => {
       window.removeEventListener("keydown", handleAudioToggle);
       window.removeEventListener("keyup", handleAudioToggle);
     };
-  }, [socket, isNearby]);
+  }, [socket, isNearby, isUserPermission]);
 
   useEffect(() => {
     initSocket(dispatch, axiosAuth);
+    if (isMobileView) setMobileView(true);
 
     return () => {
       if (socket) {
@@ -91,41 +114,6 @@ const ArenaPage = () => {
       }
     };
   }, []);
-  // useEffect(() => {
-  //   async function initSocket() {
-  //     const res = await axiosAuth.post(`${API}/socket`, {
-  //       credentials: "include",
-  //     });
-
-  //     const { token, userId, avatarId, username } = res.data;
-
-  //     const socket = io(SOCKET_API, {
-  //       // path: "/socket",
-  //       transports: ["websocket"],
-  //       auth: { token },
-  //     });
-
-  //     dispatch(
-  //       setSocketData({
-  //         socket,
-  //         token,
-  //         userId,
-  //         avatarId,
-  //         username,
-  //       })
-  //     );
-  //   }
-
-  //   // if (!socket) return;
-  //   initSocket();
-  //   return () => {
-  //     if (socket) {
-  //       console.log("socket disconnect")
-  //       socket.disconnect();
-  //       // dispatch(setSocketData(null));
-  //     }
-  //   };
-  // }, []);
 
   useEffect(() => {
     if (avatarReady && pixiReady) {
@@ -137,10 +125,30 @@ const ArenaPage = () => {
 
   return (
     <>
-      <GameNavbar />
-      <Box>
+      {/* <GameNavbar /> */}
+      <Box sx={{ position: "relative" }}>
+        {mobileView && (
+          <div
+            id="joystick-zone"
+            style={{
+              position: "fixed",
+              right: 0,
+              bottom: 0,
+              width: "50%",
+              height: "50%",
+              touchAction: "none",
+              zIndex: 100,
+            }}
+          ></div>
+        )}
         <PlanetOverlay visible={!avatarLaoding} />
-        <Arena socket={socket} />
+        <Arena
+          socket={socket}
+          mobileView={mobileView}
+          setIsUserPermisssion={setIsUserPermisssion}
+          offerVisible={offerVisible}
+          setOfferVisible={setOfferVisible}
+        />
       </Box>
     </>
   );

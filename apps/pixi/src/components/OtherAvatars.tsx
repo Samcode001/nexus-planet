@@ -5,7 +5,7 @@ import {
   // TILE_SIZE,
   // TILE_SIZE,
 } from "../constants/game-world";
-import type { Direction } from "../types/common";
+import type { Direction, selectedAvatar } from "../types/common";
 import { useHeroAnimation } from "../hook/useHeroAnimation";
 import {
   calculateNewTarget,
@@ -15,6 +15,7 @@ import {
 } from "../helper/common";
 import { Container, Sprite, Text, useTick } from "@pixi/react";
 import { TextStyle, Texture as TextureImport } from "pixi.js";
+import * as PIXI from "pixi.js";
 import ChatBubble from "../helper/chatBubble";
 
 // import { useControls } from "../hook/useControls";
@@ -32,6 +33,13 @@ interface IHeroProps {
   chatMessageId: string;
   heroPosition: { x: number; y: number };
   isNearby: boolean;
+  onScreenPos: any;
+  setSelectedOtherUserAvatar: React.Dispatch<
+    React.SetStateAction<selectedAvatar>
+  >;
+  setMultiplePopupsVisible: React.Dispatch<
+    React.SetStateAction<Record<string, boolean>>
+  >;
   //   updateHeroPosition: (x: number, y: number) => void;
 }
 
@@ -57,15 +65,20 @@ const OtherAvatars = ({
   isBubbleVisible,
   chatMessageId,
   // heroPosition,
-  isNearby
+  isNearby,
+  onScreenPos,
+  setSelectedOtherUserAvatar,
+  setMultiplePopupsVisible,
 }: IHeroProps) => {
   const avatar_position = useRef({
     x: AVATAR_X_POS,
     y: AVATAR_Y_POS,
   }); // Tracks the current pixel coordinates of the hero on the map.
+  const containerRef = useRef<PIXI.Container>(null);
   const targetPosition = useRef<{ x: number; y: number } | null>(null); //If the hero is moving, this is the destination cell’s pixel coordinates. If null, the hero is idle.
   const currentDirection = useRef<Direction | null>(null); // Current facing/moving direction, e.g., "UP", "DOWN".
   const isMoving = useRef(false);
+  const lastPos = useRef({ x: 0, y: 0 });
 
   // const isNearby = nearbyPlayers.includes(avatarId);
   // const isWithinRange = (x1: number, y1: number, x2: number, y2: number) => {
@@ -133,6 +146,21 @@ const OtherAvatars = ({
     }
   }, [AVATAR_DIRECTION, AVATAR_X_POS, AVATAR_Y_POS]);
 
+  const handleUserClick = async () => {
+    if (!isNearby) return;
+    console.log("avatar clikded");
+    setSelectedOtherUserAvatar((prev) => {
+      if (prev) return null;
+      return {
+        avatarId: AVATAR_IMAGE,
+        id: AVATAR_USERNAME,
+        username: AVATAR_USERNAME,
+      };
+    });
+    // console.log()
+    setMultiplePopupsVisible((prev) => ({ ...prev, [AVATAR_USERNAME]: true }));
+  };
+
   useTick((delta) => {
     if (targetPosition.current) {
       const { position: newPosition, completed } = handleMovement(
@@ -151,12 +179,26 @@ const OtherAvatars = ({
       }
     }
 
+    if (!containerRef.current) return;
+    const p = containerRef.current.toGlobal(new PIXI.Point());
+
+    const x = Math.round(p.x);
+    const y = Math.round(p.y - 40);
+
+    if (x !== lastPos.current.x || y !== lastPos.current.y) {
+      lastPos.current = { x, y };
+      onScreenPos.current[AVATAR_USERNAME] = { x, y };
+    }
     updateSprite(currentDirection.current!, isMoving.current);
   });
 
   return (
     <>
-      <Container y={avatar_position.current.y} x={avatar_position.current.x}>
+      <Container
+        ref={containerRef}
+        y={avatar_position.current.y}
+        x={avatar_position.current.x}
+      >
         <Text
           text={
             AVATAR_USERNAME.length > 8
@@ -175,6 +217,8 @@ const OtherAvatars = ({
             scale={0.8}
             anchor={[0, 0.3]}
             tint={isNearby ? 0xffee88 : 0xffffff} // glowing yellow tint
+            interactive
+            pointerdown={handleUserClick}
           />
         )}
         {/* Chat bubble */}

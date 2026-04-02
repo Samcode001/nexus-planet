@@ -122,16 +122,20 @@ io.on("connection", async (socket) => {
     socket.broadcast.emit("chat-message", data);
   });
 
-  socket.on("voice-offer", ({offer,userId}) => {
-    socket.broadcast.emit("voice-offer", {offer,userId});
+  socket.on("voice-offer", ({ offer, userId }) => {
+    socket.broadcast.emit("voice-offer", { offer, userId });
   });
 
-  socket.on("voice-ice", ({candidate,userId}) => {
-    socket.broadcast.emit("voice-ice", {candidate,userId});
+  socket.on("voice-ice", ({ candidate, userId }) => {
+    socket.broadcast.emit("voice-ice", { candidate, userId });
   });
 
-  socket.on("voice-answer", ({answer,userId}) => {
-    socket.broadcast.emit("voice-answer", {answer,userId});
+  socket.on("voice-answer", ({ answer, userId }) => {
+    socket.broadcast.emit("voice-answer", { answer, userId });
+  });
+
+  socket.on("voice-call-offer", ({ userId }) => {
+    socket.broadcast.emit("voice-call-offer", { userId });
   });
 
   const lastPostion = await redisClient.hgetall(`user:${user.id}:position`);

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Direction } from "../types/common";
+// import { useSelector } from "react-redux";
 
 const DIRECTION_KEYS: Record<string, Direction> = {
   ArrowUp: "UP",
@@ -11,8 +12,14 @@ const DIRECTION_KEYS: Record<string, Direction> = {
 export const useControls = () => {
   const [heldDirections, setHeldDirections] = useState<Direction[]>([]);
 
+  // const joyDirection = useSelector(
+  //   (state: any) => state.proximity.joyDirection
+  // );
+
+  // Key Movement ---------------------------------------
   const handleKey = useCallback((e: KeyboardEvent, isKeyDown: boolean) => {
     // e.preventDefault()
+    // console.log(e.code);
     const direction = DIRECTION_KEYS[e.code];
     if (!direction) return;
 
@@ -35,7 +42,13 @@ export const useControls = () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [handleKey]);
+  }, []);
+  // console.log(joyDirection);
+  // useEffect(()=>{
+  //     if(mode === "joy") {
+  //              joystickMovements
+  //   }
+  //   },[])
 
   const getControlsDirection = useCallback(
     (): { currentKey: Direction; pressedKeys: Direction[] } => ({

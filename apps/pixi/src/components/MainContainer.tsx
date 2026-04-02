@@ -11,9 +11,18 @@ import HeroGrid from "./HeroGrid";
 // import map from "../assets/tilemap.png";
 import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE } from "../constants/game-world";
 import OtherAvatars from "./OtherAvatars";
-import type { Direction } from "../types/common";
+import type { Direction, selectedAvatar } from "../types/common";
 import Camera from "./Camera";
 import { useBootStore } from "../store/bootstore";
+
+interface IAvatar {
+  id: string;
+  x: number;
+  y: number;
+  direction: Direction;
+  avatar: string;
+  username: string;
+}
 
 interface IMainContainerProps {
   canvasSize: {
@@ -31,15 +40,18 @@ interface IMainContainerProps {
   userChatVisible: boolean;
   dispatch: any;
   isNearby: boolean;
-}
-
-interface IAvatar {
-  id: string;
-  x: number;
-  y: number;
-  direction: Direction;
-  avatar: string;
-  username: string;
+  getJoystickDirection: any;
+  setNearbyPlayers: React.Dispatch<React.SetStateAction<string[]>>;
+  nearbyPlayers: string[];
+  setUsersAvatars: React.Dispatch<React.SetStateAction<IAvatar[]>>;
+  usersAvatars: IAvatar[];
+  onScreenPos: any;
+  setSelectedOtherUserAvatar: React.Dispatch<
+    React.SetStateAction<selectedAvatar>
+  >;
+  setMultiplePopupsVisible: React.Dispatch<
+    React.SetStateAction<Record<string, boolean>>
+  >;
 }
 
 const MainContainer = ({
@@ -54,8 +66,15 @@ const MainContainer = ({
   userChatVisible,
   dispatch,
   isNearby,
+  getJoystickDirection,
+  setNearbyPlayers,
+  nearbyPlayers,
+  setUsersAvatars,
+  usersAvatars,
+  onScreenPos,
+  setSelectedOtherUserAvatar,
+  setMultiplePopupsVisible,
 }: PropsWithChildren<IMainContainerProps>) => {
-  const [usersAvatars, setUsersAvatars] = useState<IAvatar[]>([]);
   const [currentDirection, setCurrentDirection] = useState<Direction | null>(
     null
   );
@@ -63,7 +82,7 @@ const MainContainer = ({
     x: 0,
     y: 0,
   });
-  const [nearbyPlayers, setNearbyPlayers] = useState<string[]>([]);
+  // const joyStickDirectionRefconst  = useRef<Direction | null>(null);
 
   // ------------------- Chat codes ----------------
   const [chatMessage, setChatMessage] = useState("");
@@ -235,6 +254,9 @@ const MainContainer = ({
             userChatVisible={userChatVisible}
             dispatch={dispatch}
             isNearby={isNearby}
+            getJoystickDirection={getJoystickDirection}
+            // joystickMovements={joystickMovements}
+            // joystickDirection={joystickDirection}
           />
 
           {usersAvatars
@@ -255,6 +277,9 @@ const MainContainer = ({
                   chatMessageId={chatMessageId}
                   heroPosition={heroPosition}
                   isNearby={isNearby}
+                  onScreenPos={onScreenPos}
+                  setSelectedOtherUserAvatar={setSelectedOtherUserAvatar}
+                  setMultiplePopupsVisible={setMultiplePopupsVisible}
                 />
               );
             })}

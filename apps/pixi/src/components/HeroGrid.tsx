@@ -31,6 +31,10 @@ interface IHeroProps {
   userChatVisible: boolean;
   dispatch: any;
   isNearby: boolean;
+  getJoystickDirection: any;
+  // joystickMovements: (direction: Direction) => void;
+  // joystickDirection: Direction | null;
+  // joyStickDirectionRef: any;
 }
 
 const textStyle = new TextStyle({
@@ -49,6 +53,10 @@ const HeroGrid = ({
   socket,
   dispatch,
   isNearby,
+  getJoystickDirection,
+  // joystickMovements,
+  // joystickDirection,
+  // joyStickDirectionRef,
 }: IHeroProps) => {
   const [isSpawned, setIsSpawned] = useState(false);
   const position = useRef({
@@ -71,7 +79,6 @@ const HeroGrid = ({
 
   // ------------------- Chat Codes ----------------------start
   // const [isNearby, setIsNearby] = useState(false);
- 
 
   const isWithinRange = (
     { x1, y1 }: { x1: number; y1: number },
@@ -83,26 +90,20 @@ const HeroGrid = ({
     // console.log(x1, y1, x2, y2, dist);
     return dist < 120;
   };
-
   // -----------------------------------------------------------end
-
-  // useEffect(() => {
-  //   if (!userInitialPosition) return;
-
-  //   position.current = userInitialPosition;
-  //   updateHeroPosition(userInitialPosition.x, userInitialPosition.y);
-  //   isSpawned.current = true;
-  // }, [userInitialPosition]);
 
   //When an arrow key is pressed, this decides if a move should start and which cell to move toward.
   const setNextTarget = useCallback((direction: Direction) => {
     // console.log("on movememtn" + JSON.stringify(position.current));
 
     if (targetPosition.current) return; // If already moving, ignores new inputs until arrived.
+    // console.log(direction);
     const { x, y } = position.current;
     updateHeroPosition(x, y); // after setting the postions from here we are emmiting the move-avatar socket connection and its values
     currentDirection.current = direction;
+    // joystickMovements(direction);
     const newTarget = calculateNewTarget(x, y, direction);
+    // const newTarget = calculateNewTargetDiagonal(x, y, direction);
     // const isBlocking = isPlayerBlocking(newTarget.x, newTarget.y, usersAvatars);
     // console.log(
     //   isBlocking,
@@ -169,6 +170,10 @@ const HeroGrid = ({
     };
   }, [socket]); // when the socket is connected via server its start the .on listening
 
+  // useEffect(() => {
+  //   console.log(joyStickDirectionRef.current);
+  // }, [joystickMovements]);
+
   useTick((delta) => {
     // Inside here everything run 60 frame per secodn so dont do the react stste update in here it costly
     //  console.log(position)
@@ -190,6 +195,16 @@ const HeroGrid = ({
     if (currentKey && !checkPlayerBlock(currentKey)) {
       setNextTarget(currentKey);
     }
+
+    const { currentJoyKey } = getJoystickDirection();
+    if (currentJoyKey) {
+      setNextTarget(currentJoyKey);
+      console.log(currentJoyKey);
+    }
+
+    // if (joyStickDirectionRef.current) {
+    //   setNextTarget(joyStickDirectionRef.current);
+    // }
 
     if (targetPosition.current) {
       const { position: newPosition, completed } = handleMovement(
