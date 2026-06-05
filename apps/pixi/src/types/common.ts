@@ -19,4 +19,5 @@ export type selectedAvatar = {
   id: string;
   username: string;
   avatarId: string;
+  chatOpen: boolean;
 } | null;

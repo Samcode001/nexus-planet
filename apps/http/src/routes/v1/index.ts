@@ -16,17 +16,18 @@ console.log(process.env.ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET);
 
 const refreshTokens = new Map<string, string>();
 
-const signRefreshToken = (userId: string) => {
-  return jwt.sign({ userId }, REFRESH_TOKEN_SECRET, {
+const signRefreshToken = (userId: string, username: string) => {
+  return jwt.sign({ userId, username }, REFRESH_TOKEN_SECRET, {
     expiresIn: "7d",
   });
 };
 
-const signAccessToken = (userId: string) => {
-  return jwt.sign({ userId }, ACCESS_TOKEN_SECRET, {
+const signAccessToken = (userId: string, username: string) => {
+  return jwt.sign({ userId, username }, ACCESS_TOKEN_SECRET, {
     expiresIn: "15m",
   });
 };
+
 router.post("/signup", async (req, res) => {
   // console.log(users);
   // const { name, username, password } = req.body;
@@ -47,12 +48,12 @@ router.post("/signup", async (req, res) => {
         id: userId,
         name: parsedData.data.name,
         username: parsedData.data.username,
-        password: hashedPassword,
+        passwordHash: hashedPassword,
       },
     });
 
-    const accessToken = signAccessToken(userId);
-    const refreshToken = signRefreshToken(userId);
+    const accessToken = signAccessToken(userId, parsedData.data.username);
+    const refreshToken = signRefreshToken(userId, parsedData.data.username);
 
     res.cookie(COOKIE_NAME, refreshToken, {
       httpOnly: true,
@@ -92,14 +93,14 @@ router.post("/signin", async (req, res) => {
       res.status(401).json({ message: "Invalid username or password" });
       return;
     }
-    const ok = await compare(parsedData.data.password, user.password);
+    const ok = await compare(parsedData.data.password, user.passwordHash);
     if (!ok) {
       res.status(401).json({ message: "Invalid username or password" });
       return;
     }
 
-    const accessToken = signAccessToken(user.id);
-    const refreshToken = signRefreshToken(user.id);
+    const accessToken = signAccessToken(user.id, parsedData.data.username);
+    const refreshToken = signRefreshToken(user.id, parsedData.data.username);
 
     res.cookie(COOKIE_NAME, refreshToken, {
       httpOnly: true,
@@ -125,8 +126,11 @@ router.post("/refresh", async (req, res) => {
     return;
   }
   try {
-    const { userId } = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as any;
-    const accessToken = signAccessToken(userId);
+    const { userId, username } = jwt.verify(
+      refreshToken,
+      REFRESH_TOKEN_SECRET,
+    ) as any;
+    const accessToken = signAccessToken(userId, username);
     res.status(200).json({ accessToken });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });

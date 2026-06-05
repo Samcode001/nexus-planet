@@ -6,7 +6,7 @@ const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET!; // It can be strin
 export const authenticateAccessToken = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const auth = req.headers["authorization"];
   if (!auth) return res.status(401).json({ message: "No token" });
@@ -17,6 +17,10 @@ export const authenticateAccessToken = (
   try {
     const payload = jwt.verify(token, ACCESS_TOKEN_SECRET) as any;
     (req as any).user = payload;
+    req.user = {
+      id: payload.userId,
+      username: payload.username,
+    };
     next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });

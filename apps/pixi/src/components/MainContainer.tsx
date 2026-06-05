@@ -47,11 +47,12 @@ interface IMainContainerProps {
   usersAvatars: IAvatar[];
   onScreenPos: any;
   setSelectedOtherUserAvatar: React.Dispatch<
-    React.SetStateAction<selectedAvatar>
+    React.SetStateAction<selectedAvatar[]>
   >;
   setMultiplePopupsVisible: React.Dispatch<
     React.SetStateAction<Record<string, boolean>>
   >;
+  multiplePopupsVisible: any;
 }
 
 const MainContainer = ({
@@ -74,9 +75,10 @@ const MainContainer = ({
   onScreenPos,
   setSelectedOtherUserAvatar,
   setMultiplePopupsVisible,
+  multiplePopupsVisible,
 }: PropsWithChildren<IMainContainerProps>) => {
   const [currentDirection, setCurrentDirection] = useState<Direction | null>(
-    null
+    null,
   );
   const [heroPosition, setHeroPosition] = useState({
     x: 0,
@@ -280,6 +282,7 @@ const MainContainer = ({
                   onScreenPos={onScreenPos}
                   setSelectedOtherUserAvatar={setSelectedOtherUserAvatar}
                   setMultiplePopupsVisible={setMultiplePopupsVisible}
+                  multiplePopupsVisible={multiplePopupsVisible}
                 />
               );
             })}

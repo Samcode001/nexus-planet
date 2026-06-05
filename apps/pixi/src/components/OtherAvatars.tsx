@@ -35,11 +35,12 @@ interface IHeroProps {
   isNearby: boolean;
   onScreenPos: any;
   setSelectedOtherUserAvatar: React.Dispatch<
-    React.SetStateAction<selectedAvatar>
+    React.SetStateAction<selectedAvatar[]>
   >;
   setMultiplePopupsVisible: React.Dispatch<
     React.SetStateAction<Record<string, boolean>>
   >;
+  multiplePopupsVisible: any;
   //   updateHeroPosition: (x: number, y: number) => void;
 }
 
@@ -69,6 +70,7 @@ const OtherAvatars = ({
   onScreenPos,
   setSelectedOtherUserAvatar,
   setMultiplePopupsVisible,
+  multiplePopupsVisible,
 }: IHeroProps) => {
   const avatar_position = useRef({
     x: AVATAR_X_POS,
@@ -102,7 +104,7 @@ const OtherAvatars = ({
 
   const texture = useMemo(
     () => TextureImport.from(`/avatars/${AVATAR_IMAGE}.png`),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -148,16 +150,28 @@ const OtherAvatars = ({
 
   const handleUserClick = async () => {
     if (!isNearby) return;
-    console.log("avatar clikded");
+    // console.log("avatar clikded");
+
     setSelectedOtherUserAvatar((prev) => {
-      if (prev) return null;
-      return {
-        avatarId: AVATAR_IMAGE,
-        id: AVATAR_USERNAME,
-        username: AVATAR_USERNAME,
-      };
+      let userExist = prev.find((elem) => elem?.username === AVATAR_USERNAME);
+      if (!userExist) {
+        return [
+          ...prev,
+          {
+            avatarId: AVATAR_IMAGE,
+            id: avatarId,
+            username: AVATAR_USERNAME,
+            chatOpen: false,
+          },
+        ];
+      } else return prev;
     });
-    // console.log()
+    // console.log(AVATAR_USERNAME, avatarId);
+    if (multiplePopupsVisible[AVATAR_USERNAME])
+      return setMultiplePopupsVisible((prev) => ({
+        ...prev,
+        [AVATAR_USERNAME]: false,
+      }));
     setMultiplePopupsVisible((prev) => ({ ...prev, [AVATAR_USERNAME]: true }));
   };
 
@@ -167,7 +181,7 @@ const OtherAvatars = ({
         avatar_position.current,
         targetPosition.current,
         MOVE_SPEED,
-        delta
+        delta,
       );
 
       avatar_position.current = newPosition;

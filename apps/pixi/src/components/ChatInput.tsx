@@ -1,7 +1,9 @@
 import { Box, Button, TextField } from "@mui/material";
-import { type PropsWithChildren } from "react";
+import React, { type PropsWithChildren } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../redux/store";
+import type { selectedAvatar } from "../types/common";
+import CloseIcon from "@mui/icons-material/Close";
 
 interface IChatInput {
   chatInput: string;
@@ -9,6 +11,12 @@ interface IChatInput {
   setUserchat: React.Dispatch<React.SetStateAction<string>>;
   chatOpen: boolean;
   setUserchatVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedOtherUserAvatar: selectedAvatar[];
+  setChatOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  avatarUsername: string;
+  setSelectedOtherUserAvatar: React.Dispatch<
+    React.SetStateAction<selectedAvatar[]>
+  >;
 }
 
 const ChatInput = ({
@@ -17,9 +25,16 @@ const ChatInput = ({
   setUserchat,
   chatOpen,
   setUserchatVisible,
+  selectedOtherUserAvatar,
+  setChatOpen,
+  avatarUsername,
+  setSelectedOtherUserAvatar,
 }: PropsWithChildren<IChatInput>) => {
   const socket = useSelector((state: RootState) => state.socket.socket);
   const socketUserId = useSelector((state: RootState) => state.socket.userId);
+  const socketUsername = useSelector(
+    (state: RootState) => state.socket.username,
+  );
 
   const bubbleTimer = import.meta.env.VITE_CHAT_BUBBLE_TIMEOUT;
 
@@ -72,6 +87,32 @@ const ChatInput = ({
             pointerEvents: chatOpen ? "auto" : "none", // prevents clicking while hidden
           }}
         >
+          <CloseIcon
+            sx={{
+              color: "#d9ff00",
+              position: "absolute",
+              top: "-5px",
+              right: "8px",
+              cursor: "pointer",
+              outline: "2px solid #d9ff00",
+              borderRadius: "5px",
+              backgroundColor: "black",
+              ":hover": {
+                color: "whitesmoke",
+                outline: "2px solid whitesmoke",
+                borderRadius: "5px",
+              },
+            }}
+            onClick={() => {
+              setSelectedOtherUserAvatar((prev) => {
+                return prev.map((elem) =>
+                  elem?.username === avatarUsername
+                    ? { ...elem, chatOpen: !elem.chatOpen }
+                    : elem,
+                );
+              });
+            }}
+          />
           <Box
             sx={{
               color: "#d9ff00",
@@ -81,7 +122,8 @@ const ChatInput = ({
               textShadow: "0px 0px 4px #d9ff00",
             }}
           >
-            CHAT WINDOW
+            {/* CHAT WINDOW ({selectedOtherUserAvatar?.username.toUpperCase()}) */}
+            CHAT WINDOW {avatarUsername}
           </Box>
 
           {/* <input

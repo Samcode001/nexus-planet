@@ -8,7 +8,7 @@ import type { selectedAvatar } from "../types/common";
 interface Props {
   x: number;
   y: number;
-  selectedOtherUserAvatar: selectedAvatar;
+  selectedOtherUserAvatar: selectedAvatar[];
   setIsUserPermisssion: React.Dispatch<
     React.SetStateAction<{ permission: boolean; userStream: any }>
   >;
@@ -16,7 +16,7 @@ interface Props {
   avatarId: string;
   setChatOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedOtherUserAvatar: React.Dispatch<
-    React.SetStateAction<selectedAvatar>
+    React.SetStateAction<selectedAvatar[]>
   >;
   setMultiplePopupsVisible: React.Dispatch<
     React.SetStateAction<Record<string, boolean>>
@@ -58,7 +58,7 @@ const AvatarVoicePrompt = ({
   };
 
   useEffect(() => {
-    console.log(selectedOtherUserAvatar, visible, avatarId);
+    // console.log(selectedOtherUserAvatar, visible, avatarId);
   }, [selectedOtherUserAvatar]);
 
   return (
@@ -128,7 +128,18 @@ const AvatarVoicePrompt = ({
             e.stopPropagation();
             console.log("chat clicked");
             setChatOpen((prev) => !prev);
-            setSelectedOtherUserAvatar(null);
+            setSelectedOtherUserAvatar((prev) => {
+              return prev.map((elem) =>
+                elem?.username === avatarUsername
+                  ? { ...elem, chatOpen: !elem.chatOpen }
+                  : elem,
+              );
+            });
+            // responsible for closing the options after clicking on chat
+            setMultiplePopupsVisible((prev) => ({
+              ...prev,
+              [avatarUsername]: false,
+            }));
           }}
           style={{
             position: "absolute",

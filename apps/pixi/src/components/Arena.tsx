@@ -35,14 +35,16 @@ const Arena = ({
   const canvasSize = useDimensions();
   const [userSprite, setUserSprite] = useState<string>("/avatars/hero.png");
   const [userChat, setUserchat] = useState("");
+  const [userChatId, setUserChatId] = useState<Record<string, boolean>>({});
   const [userChatVisible, setUserchatVisible] = useState(false);
   const [usersAvatars, setUsersAvatars] = useState<IAvatar[]>([]);
   const [nearbyPlayers, setNearbyPlayers] = useState<string[]>([]);
   const [screenPos, setScreenPos] = useState<
     Record<string, { x: number; y: number }>
   >({});
-  const [selectedOtherUserAvatar, setSelectedOtherUserAvatar] =
-    useState<selectedAvatar>(null);
+  const [selectedOtherUserAvatar, setSelectedOtherUserAvatar] = useState<
+    selectedAvatar[]
+  >([]);
   const [multiplePopupsVisible, setMultiplePopupsVisible] = useState<
     Record<string, boolean>
   >({});
@@ -116,6 +118,7 @@ const Arena = ({
 
   useEffect(() => {
     console.log(selectedOtherUserAvatar);
+    // console.log(multiplePopupsVisible);
   }, [selectedOtherUserAvatar]);
 
   useEffect(() => {
@@ -124,7 +127,7 @@ const Arena = ({
   }, [usersAvatars, isNearby]);
   // console.log(useBootStore.getState().ready);
 
-  // ------ Chat States
+  // ------ Chat States ---------------------------------------
   const [chatInput, setChatInput] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
 
@@ -175,15 +178,22 @@ const Arena = ({
             onScreenPos={onScreenPos}
             setSelectedOtherUserAvatar={setSelectedOtherUserAvatar}
             setMultiplePopupsVisible={setMultiplePopupsVisible}
+            multiplePopupsVisible={multiplePopupsVisible}
           />
         </Stage>
-        <ChatInput
-          chatInput={chatInput}
-          setChatInput={setChatInput}
-          chatOpen={chatOpen}
-          setUserchat={setUserchat}
-          setUserchatVisible={setUserchatVisible}
-        />
+        {selectedOtherUserAvatar.map((avatar) => (
+          <ChatInput
+            chatInput={chatInput}
+            setChatInput={setChatInput}
+            chatOpen={avatar?.chatOpen!}
+            setUserchat={setUserchat}
+            setUserchatVisible={setUserchatVisible}
+            selectedOtherUserAvatar={selectedOtherUserAvatar}
+            setChatOpen={setChatOpen}
+            avatarUsername={avatar?.username!}
+            setSelectedOtherUserAvatar={setSelectedOtherUserAvatar}
+          />
+        ))}
         {usersAvatars.map((avatar) => {
           const pos = screenPos[avatar.username];
           if (!pos) return null;
