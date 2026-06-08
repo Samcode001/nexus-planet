@@ -8,8 +8,10 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Profile } from "./pages/Profile";
 import AvatarsPage from "./pages/AvatarsPage";
 import ArenaPage from "./pages/ArenaPage";
+import { wsManager } from "./socket/wsManager";
 
 function App() {
+  wsManager.connect();
   return (
     <>
       <AuthProvider>

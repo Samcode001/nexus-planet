@@ -27,6 +27,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "esbuild": "^0.25.8"
+    "esbuild": "^0.25.8",
+    "tsx": "^4.22.4"
   }
 }

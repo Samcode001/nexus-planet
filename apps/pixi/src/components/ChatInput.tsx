@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../redux/store";
 import type { selectedAvatar } from "../types/common";
 import CloseIcon from "@mui/icons-material/Close";
+import { wsManager } from "../socket/wsManager";
 
 interface IChatInput {
   chatInput: string;
@@ -51,6 +52,10 @@ const ChatInput = ({
     if (!socket) return;
     setChatInput("");
     socket.emit("chat-message", {
+      id: socketUserId,
+      chat: chatInput,
+    });
+    wsManager.sendMessage({
       id: socketUserId,
       chat: chatInput,
     });

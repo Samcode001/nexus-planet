@@ -82,6 +82,21 @@ enum ConversationType {
   GROUP
 }
 
+model Friend {
+  id          String @id @default(uuid())
+  requesterId String
+  reciverId   String
+
+  friendStatus FriendStatus @default(PENDING)
+  createdAt    DateTime     @default(now())
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
 // model Avatar {
 //   id       String  @id @unique @default(cuid())
 //   imageUrl String?

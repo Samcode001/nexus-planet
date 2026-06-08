@@ -14,6 +14,7 @@ import OtherAvatars from "./OtherAvatars";
 import type { Direction, selectedAvatar } from "../types/common";
 import Camera from "./Camera";
 import { useBootStore } from "../store/bootstore";
+import { wsManager } from "../socket/wsManager";
 
 interface IAvatar {
   id: string;
@@ -99,6 +100,14 @@ const MainContainer = ({
     if (!socket) return;
 
     socket.emit("move-avatar", {
+      id: socketUserId,
+      username: socketUsername,
+      x: heroPosition.x * TILE_SIZE,
+      y: heroPosition.y * TILE_SIZE,
+      direction: currentDirection,
+      avatar: socketAvatarId,
+    });
+    wsManager.sendMessage({
       id: socketUserId,
       username: socketUsername,
       x: heroPosition.x * TILE_SIZE,

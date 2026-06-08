@@ -12,11 +12,12 @@ userRouter.get("/users", (req, res) => {
 });
 
 userRouter.get("/profile", authenticateAccessToken, async (req, res) => {
-  const userToken = (req as any).user;
+  // const userToken = (req as any).user;
+  const userId = req.user?.id;
   // fetch user from DB
   const user = await client.user.findUnique({
     where: {
-      id: userToken.userId,
+      id: userId,
     },
   });
   // console.log(userToken, user);
@@ -30,13 +31,14 @@ userRouter.get("/profile", authenticateAccessToken, async (req, res) => {
 });
 
 userRouter.put("/set-avatar", authenticateAccessToken, async (req, res) => {
-  const userToken = (req as any).user;
+  // const userToken = (req as any).user;
 
   const avatarID = req.body.avatar;
-
+  const userId = req.user?.id;
+  console.log(req.user?.id, avatarID);
   const user = await client.user.findUnique({
     where: {
-      id: userToken.userId,
+      id: userId,
     },
   });
   // console.log(userToken, user);
@@ -44,7 +46,7 @@ userRouter.put("/set-avatar", authenticateAccessToken, async (req, res) => {
 
   const userUpdate = await client.user.update({
     where: {
-      id: userToken.userId,
+      id: userId,
     },
     data: {
       avatarId: avatarID,
@@ -54,33 +56,35 @@ userRouter.put("/set-avatar", authenticateAccessToken, async (req, res) => {
 });
 
 userRouter.post("/socket", authenticateAccessToken, async (req, res) => {
-  const userObject = (req as any).user;
-  const token = jwt.sign(
-    { id: userObject.userId, username: userObject.username },
-    SOCKET_SECRET,
-    { expiresIn: "10m" }
-  );
+  // const userObject = (req as any).user;
+  const userId = req.user?.id;
+  const username = req.user?.username;
+  const token = jwt.sign({ id: userId, username: username }, SOCKET_SECRET, {
+    expiresIn: "10m",
+  });
   const user = await client.user.findUnique({
     where: {
-      id: userObject.userId,
+      id: userId,
     },
   });
   // console.log(token, user);
   if (!user) return res.status(404).json({ message: "User not found" });
   res.json({
     token,
-    userId: userObject.userId,
+    userId: userId,
     avatarId: user.avatarId,
     username: user.username,
   });
 });
 
 userRouter.get("/avatar", authenticateAccessToken, async (req, res) => {
-  const userToken = (req as any).user;
+  // const userToken = (req as any).user;
+  const userId = req.user?.id;
+  // console.log(userToken)
   // fetch user from DB
   const user = await client.user.findUnique({
     where: {
-      id: userToken.userId,
+      id: userId,
     },
   });
   // console.log(userToken, user);
@@ -90,4 +94,20 @@ userRouter.get("/avatar", authenticateAccessToken, async (req, res) => {
   });
 });
 
+userRouter.post("/add_friend", authenticateAccessToken, async (req, res) => {
+  try {
+    const { reciverId } = req.body;
+    const status = await client.friend.create({
+      data: {
+        requesterId: req.user?.id!,
+        reciverId,
+      },
+    });
+
+    res.status(201).json({ message: "Friend Request Sent", status });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(`Internal Server Error`);
+  }
+});
 export default userRouter;
