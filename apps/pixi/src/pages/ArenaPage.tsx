@@ -16,6 +16,7 @@ import { Box } from "@mui/material";
 import PlanetOverlay from "./ArenaOverlay";
 import { initSocket } from "../socket/socketManager";
 import usePeerConnection from "../hook/usePeerConnection";
+import { wsManager } from "../socket/wsManager";
 
 // const API = import.meta.env.VITE_USER_API_URL;
 // const SOCKET_API = import.meta.env.VITE_SOCKET_API_URL;
@@ -83,7 +84,7 @@ const ArenaPage = () => {
       try {
         // alert("want to make peer conn");
         if (isUserPermission.permission) {
-          console.log("user permission gave",USER_ID);
+          console.log("user permission gave", USER_ID);
 
           // await hanldeAudio(USER_ID!, isUserPermission.userStream);
         }
@@ -105,6 +106,8 @@ const ArenaPage = () => {
 
   useEffect(() => {
     initSocket(dispatch, axiosAuth);
+    wsManager.join(axiosAuth); // the room join for the
+
     if (isMobileView) setMobileView(true);
 
     return () => {

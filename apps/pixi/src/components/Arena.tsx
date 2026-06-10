@@ -117,7 +117,7 @@ const Arena = ({
   }, []);
 
   useEffect(() => {
-    console.log(selectedOtherUserAvatar);
+    // console.log(selectedOtherUserAvatar);
     // console.log(multiplePopupsVisible);
   }, [selectedOtherUserAvatar]);
 
@@ -181,8 +181,9 @@ const Arena = ({
             multiplePopupsVisible={multiplePopupsVisible}
           />
         </Stage>
-        {selectedOtherUserAvatar.map((avatar) => (
+        {selectedOtherUserAvatar.map((avatar, index) => (
           <ChatInput
+            key={index}
             chatInput={chatInput}
             setChatInput={setChatInput}
             chatOpen={avatar?.chatOpen!}

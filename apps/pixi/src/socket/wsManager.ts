@@ -1,3 +1,5 @@
+const API = import.meta.env.VITE_USER_API_URL;
+
 class WsManager {
   private Socket: WebSocket | null = null;
 
@@ -17,8 +19,21 @@ class WsManager {
     };
   }
 
-  sendMessage(data: any) {
-    this.Socket?.send(JSON.stringify(data));
+  async join(axiosAuth: any) {
+    const { data } = await axiosAuth.post(`${API}/socket`, {
+      credentials: "include",
+    });
+    const { userId, avatarId, username } = data;
+    this.sendMessage("join", {
+      userId,
+      username,
+      avatarId,
+      roomId:"1"
+    });
+  
+  }
+  sendMessage(type: any, data: any) {
+    this.Socket?.send(JSON.stringify({ type, payload: data }));
   }
 }
 

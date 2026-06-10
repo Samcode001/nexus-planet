@@ -55,9 +55,11 @@ const ChatInput = ({
       id: socketUserId,
       chat: chatInput,
     });
-    wsManager.sendMessage({
-      id: socketUserId,
-      chat: chatInput,
+    wsManager.sendMessage("proximity_message", {
+      userId: socketUserId,
+      content: chatInput,
+      targetUsername: selectedOtherUserAvatar[0]?.username,
+      roomId: "1",
     });
   };
   return (

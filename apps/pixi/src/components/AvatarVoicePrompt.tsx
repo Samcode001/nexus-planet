@@ -4,6 +4,8 @@ import { MdRecordVoiceOver } from "react-icons/md";
 import { useSelector } from "react-redux";
 import type { RootState } from "../redux/store";
 import type { selectedAvatar } from "../types/common";
+import { wsManager } from "../socket/wsManager";
+import { useAxiosAuth } from "../api/axiosClient";
 
 interface Props {
   x: number;
@@ -39,6 +41,8 @@ const AvatarVoicePrompt = ({
   const isMobileView = useSelector(
     (state: RootState) => state.proximity.isMobileView,
   );
+
+  const axiosAuth = useAxiosAuth();
   const liftByDevice = !isMobileView ? -15 : -6;
   const leftDevice = !isMobileView ? 50 : 20;
   const lift = visible ? liftByDevice : -10; // goes up when near, down when far
@@ -55,6 +59,25 @@ const AvatarVoicePrompt = ({
     // audio: true,
     // });
     // setIsUserPermisssion((prev) => ({ ...prev, userStream: stream }));
+  };
+
+  const handleChatSubmit = async (e: any) => {
+    e.stopPropagation();
+    console.log("chat clicked");
+
+    setChatOpen((prev) => !prev);
+    setSelectedOtherUserAvatar((prev) => {
+      return prev.map((elem) =>
+        elem?.username === avatarUsername
+          ? { ...elem, chatOpen: !elem.chatOpen }
+          : elem,
+      );
+    });
+    // responsible for closing the options after clicking on chat
+    setMultiplePopupsVisible((prev) => ({
+      ...prev,
+      [avatarUsername]: false,
+    }));
   };
 
   useEffect(() => {
@@ -124,23 +147,7 @@ const AvatarVoicePrompt = ({
         </div>
 
         <div
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log("chat clicked");
-            setChatOpen((prev) => !prev);
-            setSelectedOtherUserAvatar((prev) => {
-              return prev.map((elem) =>
-                elem?.username === avatarUsername
-                  ? { ...elem, chatOpen: !elem.chatOpen }
-                  : elem,
-              );
-            });
-            // responsible for closing the options after clicking on chat
-            setMultiplePopupsVisible((prev) => ({
-              ...prev,
-              [avatarUsername]: false,
-            }));
-          }}
+          onClick={handleChatSubmit}
           style={{
             position: "absolute",
             transform: visible

@@ -107,13 +107,14 @@ const MainContainer = ({
       direction: currentDirection,
       avatar: socketAvatarId,
     });
-    wsManager.sendMessage({
-      id: socketUserId,
+    wsManager.sendMessage("move_avatar", {
+      userId: socketUserId,
       username: socketUsername,
       x: heroPosition.x * TILE_SIZE,
       y: heroPosition.y * TILE_SIZE,
       direction: currentDirection,
       avatar: socketAvatarId,
+      roomId:"1"
     });
   }, [heroPosition]);
 
