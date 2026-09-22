@@ -41,7 +41,7 @@ export const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axiosAuth.get("/profile");
+        const res = await axiosAuth.get("user/profile");
         setProfile(res.data);
 
         setCurrentAvatar(

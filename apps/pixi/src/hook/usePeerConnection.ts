@@ -42,7 +42,7 @@ const usePeerConnection = (socket: Socket, pcRef: any) => {
 
     audioSenderRef.current = pc.addTrack(
       micTrackRef.current!,
-      streamRef.current!
+      streamRef.current!,
     ); // add the stream to the pipe
 
     pc.ontrack = (e) => {
@@ -52,10 +52,10 @@ const usePeerConnection = (socket: Socket, pcRef: any) => {
       audio.autoplay = true;
     };
 
-    pc.onicecandidate = (e) => {
-      if (e.candidate)
-        socket.emit("voice-ice", { candidate: e.candidate, userId });
-    };
+    // pc.onicecandidate = (e) => {
+    //   // if (e.candidate)
+    //   // socket.emit("voice-ice", { candidate: e.candidate, userId });
+    // };
     pcRef.current[userId] = pc;
     return pc;
   };
@@ -102,7 +102,7 @@ const usePeerConnection = (socket: Socket, pcRef: any) => {
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
 
-    socket.emit("voice-answer", { answer, userId });
+    // socket.emit("voice-answer", { answer, userId });
   };
 
   const handleAudioToggle = (e: KeyboardEvent) => {

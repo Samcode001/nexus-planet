@@ -3,7 +3,7 @@ import { TextStyle } from "pixi.js";
 
 const ChatBubble = ({ message }: { message: string }) => {
   const chatStyle = new TextStyle({
-    fontSize: 13,
+    fontSize: 10,
     fill: "#ffffff",
     stroke: "#000000",
     strokeThickness: 2,
@@ -11,6 +11,7 @@ const ChatBubble = ({ message }: { message: string }) => {
     wordWrapWidth: 120,
     align: "center",
   });
+
 
   return (
     <Container y={-20} x={45}>
@@ -33,7 +34,13 @@ const ChatBubble = ({ message }: { message: string }) => {
       />
 
       {/* TEXT */}
-      <Text text={message} anchor={0.5} x={0} y={-10} style={chatStyle} />
+      <Text
+        text={message}
+        anchor={0.5}
+        x={0}
+        y={-10}
+        style={chatStyle}
+      />
     </Container>
   );
 };

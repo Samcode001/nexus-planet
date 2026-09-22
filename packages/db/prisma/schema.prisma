@@ -77,6 +77,23 @@ model Message {
   @@index([conversationId, createdAt])
 }
 
+model MessageRequest {
+  id         String               @id @default(uuid())
+  content    String
+  senderId   String
+  receiverId String
+  status     MessageRequestStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum MessageRequestStatus {
+  PENDING
+  ACCEPTED
+  IGNORED
+}
+
 enum ConversationType {
   DIRECT
   GROUP

@@ -3,14 +3,15 @@ import { memo, useEffect } from "react";
 import { MdRecordVoiceOver } from "react-icons/md";
 import { useSelector } from "react-redux";
 import type { RootState } from "../redux/store";
-import type { selectedAvatar } from "../types/common";
-import { wsManager } from "../socket/wsManager";
-import { useAxiosAuth } from "../api/axiosClient";
+import type { selectedUser } from "../types/common";
+// import { wsManager } from "../socket/wsManager";
+// import { wsManager } from "../socket/wsManager";
+// import { useAxiosAuth } from "../api/axiosClient";
 
 interface Props {
   x: number;
   y: number;
-  selectedOtherUserAvatar: selectedAvatar[];
+  selectedOtherUserAvatar: selectedUser;
   setIsUserPermisssion: React.Dispatch<
     React.SetStateAction<{ permission: boolean; userStream: any }>
   >;
@@ -18,7 +19,7 @@ interface Props {
   avatarId: string;
   setChatOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedOtherUserAvatar: React.Dispatch<
-    React.SetStateAction<selectedAvatar[]>
+    React.SetStateAction<selectedUser>
   >;
   setMultiplePopupsVisible: React.Dispatch<
     React.SetStateAction<Record<string, boolean>>
@@ -30,9 +31,9 @@ const AvatarVoicePrompt = ({
   x,
   y,
   selectedOtherUserAvatar,
-  setIsUserPermisssion,
+  // setIsUserPermisssion,
   visible,
-  avatarId,
+  // avatarId,
   setChatOpen,
   setSelectedOtherUserAvatar,
   setMultiplePopupsVisible,
@@ -42,7 +43,7 @@ const AvatarVoicePrompt = ({
     (state: RootState) => state.proximity.isMobileView,
   );
 
-  const axiosAuth = useAxiosAuth();
+  // const axiosAuth = useAxiosAuth();
   const liftByDevice = !isMobileView ? -15 : -6;
   const leftDevice = !isMobileView ? 50 : 20;
   const lift = visible ? liftByDevice : -10; // goes up when near, down when far
@@ -64,15 +65,20 @@ const AvatarVoicePrompt = ({
   const handleChatSubmit = async (e: any) => {
     e.stopPropagation();
     console.log("chat clicked");
+    // wsManager.sendMessage("notify", { username: avatarUsername });
 
     setChatOpen((prev) => !prev);
-    setSelectedOtherUserAvatar((prev) => {
-      return prev.map((elem) =>
-        elem?.username === avatarUsername
-          ? { ...elem, chatOpen: !elem.chatOpen }
-          : elem,
-      );
-    });
+    // setSelectedOtherUserAvatar((prev) => {
+    //   return prev.map((elem) =>
+    //     elem?.username === avatarUsername
+    //       ? { ...elem, chatOpen: !elem.chatOpen }
+    //       : elem,
+    //   );
+    // });
+    setSelectedOtherUserAvatar((prev) => ({
+      ...prev!,
+      chatOpen: !prev?.chatOpen,
+    }));
     // responsible for closing the options after clicking on chat
     setMultiplePopupsVisible((prev) => ({
       ...prev,

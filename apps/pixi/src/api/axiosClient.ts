@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { useAuth } from "../auth/AuthProvider";
+import type { InternalAxiosRequestConfig } from "axios";
 
 // Create plain axios instance (no auth)
 export const api = axios.create({
@@ -12,6 +13,7 @@ export const api = axios.create({
  * Hook that returns an axios instance which will use the in-memory token.
  * We make a small wrapper hook because interceptors need access to current token and refresh function.
  */
+
 export const useAxiosAuth = () => {
   const { accessToken, refreshAccessToken } = useAuth();
 
@@ -19,7 +21,7 @@ export const useAxiosAuth = () => {
   const axiosAuth = axios.create({
     //New axios instance that will be used only for authenticated calls.
     baseURL: import.meta.env.VITE_USER_API_URL,
-    // baseURL: "http://localhost:3000/v1",
+    // baseURL: "http://localhost:3000/api",
     withCredentials: true,
   });
 
@@ -35,7 +37,7 @@ export const useAxiosAuth = () => {
   axiosAuth.interceptors.response.use(
     (res) => res,
     async (error: AxiosError) => {
-      const originalReq: any = error.config;
+      const originalReq = error.config as RetryableErrorConfig;
       if (error.response?.status === 401 && !originalReq._retry) {
         originalReq._retry = true;
         const newToken = await refreshAccessToken();
@@ -45,8 +47,12 @@ export const useAxiosAuth = () => {
         }
       }
       return Promise.reject(error);
-    }
+    },
   );
 
   return axiosAuth;
+};
+
+type RetryableErrorConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
 };

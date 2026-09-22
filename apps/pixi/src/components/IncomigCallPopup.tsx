@@ -18,12 +18,12 @@ const IncomingCallPopup = ({
   caller,
   visible,
   setOfferVisible,
-  avatarId,
+  // avatarId,
 }: CallPopup) => {
   const isMobileView = useSelector(
     (state: RootState) => state.proximity.isMobileView
   );
-  const USER_ID = useSelector((state: RootState) => state.socket.userId);
+  // const USER_ID = useSelector((state: RootState) => state.socket.userId);
 
   const liftByDevice = !isMobileView ? -15 : -6;
   const leftDevice = !isMobileView ? 50 : 20;
@@ -42,7 +42,7 @@ const IncomingCallPopup = ({
   };
 
   useEffect(() => {
-    console.log(avatarId, USER_ID);
+    // console.log(avatarId, USER_ID);
   }, []);
 
   return (

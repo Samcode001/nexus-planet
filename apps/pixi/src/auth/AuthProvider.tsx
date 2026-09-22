@@ -6,6 +6,8 @@ import {
   useEffect,
 } from "react";
 import axios from "axios";
+import { useDispatch } from "react-redux";
+import { setUserToken } from "../redux/user/userSlice";
 
 const API = import.meta.env.VITE_AUTH_API_URL;
 // const API = "http://localhost:3000/v1";
@@ -16,7 +18,7 @@ type AuthContextType = {
   signUp: (
     name: string,
     username: string,
-    password: string
+    password: string,
   ) => Promise<Boolean>;
   login: (username: string, password: string) => Promise<Boolean>;
   logout: () => Promise<void>;
@@ -35,14 +37,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const dispatch = useDispatch();
+
   const signUp = async (name: string, username: string, password: string) => {
     const res = await axios.post(
       `${API}/signup`,
       { name, username, password },
-      { withCredentials: true }
+      { withCredentials: true },
     );
     if (res.status === 200) {
       setAccessToken(res.data.accessToken);
+      dispatch(setUserToken({ token: res.data.accessToken }));
     } else {
       throw new Error("Invalid username or password");
     }
@@ -54,10 +59,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const res = await axios.post(
       `${API}/signin`,
       { username, password },
-      { withCredentials: true }
+      { withCredentials: true },
     );
     if (res.status === 200) {
       setAccessToken(res.data.accessToken);
+      dispatch(setUserToken({ token: res.data.accessToken }));
     } else {
       throw new Error("Invalid username or password");
     }
@@ -74,10 +80,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const res = await axios.post(
         `${API}/refresh`,
         {},
-        { withCredentials: true }
+        { withCredentials: true },
       );
       const newToken = res.data.accessToken;
       setAccessToken(newToken);
+      dispatch(setUserToken({ token: newToken }));
+
       return newToken;
     } catch (err) {
       setAccessToken(null);

@@ -5,7 +5,12 @@ import {
   // TILE_SIZE,
   // TILE_SIZE,
 } from "../constants/game-world";
-import type { Direction, selectedAvatar } from "../types/common";
+import type {
+  Direction,
+  IncomingMessageData,
+  IUserData,
+  selectedUser,
+} from "../types/common";
 import { useHeroAnimation } from "../hook/useHeroAnimation";
 import {
   calculateNewTarget,
@@ -17,6 +22,9 @@ import { Container, Sprite, Text, useTick } from "@pixi/react";
 import { TextStyle, Texture as TextureImport } from "pixi.js";
 import * as PIXI from "pixi.js";
 import ChatBubble from "../helper/chatBubble";
+import NotificationBubble from "../helper/notification";
+import type { AppDispatch } from "../redux/store";
+import { setSelectedUser } from "../redux/user/userSlice";
 
 // import { useControls } from "../hook/useControls";
 
@@ -28,20 +36,22 @@ interface IHeroProps {
   AVATAR_IMAGE: string;
   AVATAR_USERNAME: string;
   nearbyPlayers: string[];
-  chatMessage: string;
-  isBubbleVisible: boolean;
-  chatMessageId: string;
   heroPosition: { x: number; y: number };
   isNearby: boolean;
   onScreenPos: any;
   setSelectedOtherUserAvatar: React.Dispatch<
-    React.SetStateAction<selectedAvatar[]>
+    React.SetStateAction<selectedUser>
   >;
   setMultiplePopupsVisible: React.Dispatch<
     React.SetStateAction<Record<string, boolean>>
   >;
   multiplePopupsVisible: any;
-  //   updateHeroPosition: (x: number, y: number) => void;
+  incomingMessageData: IncomingMessageData;
+  setIncomingMessageData: React.Dispatch<
+    React.SetStateAction<IncomingMessageData>
+  >;
+  userData: IUserData;
+  dispatch: AppDispatch;
 }
 
 const textStyle = new TextStyle({
@@ -62,15 +72,15 @@ const OtherAvatars = ({
   AVATAR_USERNAME,
   // nearbyPlayers,
   avatarId,
-  chatMessage,
-  isBubbleVisible,
-  chatMessageId,
-  // heroPosition,
   isNearby,
   onScreenPos,
   setSelectedOtherUserAvatar,
   setMultiplePopupsVisible,
   multiplePopupsVisible,
+  incomingMessageData,
+  setIncomingMessageData,
+  userData,
+  dispatch,
 }: IHeroProps) => {
   const avatar_position = useRef({
     x: AVATAR_X_POS,
@@ -152,27 +162,55 @@ const OtherAvatars = ({
     if (!isNearby) return;
     // console.log("avatar clikded");
 
-    setSelectedOtherUserAvatar((prev) => {
-      let userExist = prev.find((elem) => elem?.username === AVATAR_USERNAME);
-      if (!userExist) {
-        return [
-          ...prev,
-          {
-            avatarId: AVATAR_IMAGE,
-            id: avatarId,
-            username: AVATAR_USERNAME,
-            chatOpen: false,
-          },
-        ];
-      } else return prev;
+    // setSelectedOtherUserAvatar((prev) => {
+    //   let userExist = prev.find((elem) => elem?.username === AVATAR_USERNAME);
+    //   if (!userExist) {
+    //     return [
+    //       ...prev,
+    //       {
+    //         avatarId: AVATAR_IMAGE,
+    //         id: avatarId,
+    //         username: AVATAR_USERNAME,
+    //         chatOpen: false,
+    //       },
+    //     ];
+    //   } else return prev;
+    // });
+    const isConversationExist = userData.conversations?.find((c) =>
+      c.chatMembersIds.includes(avatarId),
+    );
+
+    // console.log(
+    //   "isConversationsExist",
+    //   `${userData.username}&${AVATAR_USERNAME}`,
+    //   isConversationExist,
+    // );
+
+    setSelectedOtherUserAvatar({
+      userId: avatarId,
+      username: AVATAR_USERNAME,
+      avatarId: AVATAR_IMAGE,
+      chatOpen: false,
+      conversationId: isConversationExist ? isConversationExist.id : null,
     });
+
+    dispatch(
+      setSelectedUser({
+        userId: avatarId,
+        username: AVATAR_USERNAME,
+        avatarId: AVATAR_IMAGE,
+        chatOpen: false,
+        conversationId: isConversationExist ? isConversationExist.id : null,
+      }),
+    );
+
     // console.log(AVATAR_USERNAME, avatarId);
     if (multiplePopupsVisible[AVATAR_USERNAME])
       return setMultiplePopupsVisible((prev) => ({
         ...prev,
         [AVATAR_USERNAME]: false,
       }));
-    setMultiplePopupsVisible((prev) => ({ ...prev, [AVATAR_USERNAME]: true }));
+    setMultiplePopupsVisible({ [AVATAR_USERNAME]: true });
   };
 
   useTick((delta) => {
@@ -237,10 +275,18 @@ const OtherAvatars = ({
         )}
         {/* Chat bubble */}
 
-        {isBubbleVisible &&
+        {incomingMessageData.isBubbleVisible &&
           // isNearby &&
-          (chatMessageId === avatarId ? (
-            <ChatBubble message={chatMessage} />
+          (incomingMessageData.senderId === avatarId ? (
+            <ChatBubble message={incomingMessageData.content} />
+          ) : null)}
+
+        {incomingMessageData.isNotificationVisible &&
+          (incomingMessageData.senderId === avatarId ? (
+            <NotificationBubble
+              incomingMessageData={incomingMessageData}
+              setIncomingMessageData={setIncomingMessageData}
+            />
           ) : null)}
       </Container>
     </>

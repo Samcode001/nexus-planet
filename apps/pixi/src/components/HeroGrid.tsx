@@ -5,7 +5,7 @@ import {
   DEFAULT_Y_POS,
   MOVE_SPEED,
 } from "../constants/game-world";
-import type { Direction, IAvatar } from "../types/common";
+import type { Direction, IAvatar, IUserData } from "../types/common";
 import { useHeroAnimation } from "../hook/useHeroAnimation";
 import { TextStyle, type Texture } from "pixi.js";
 import {
@@ -25,7 +25,7 @@ interface IHeroProps {
   setCurrentDirection: (direction: Direction) => void;
   usersAvatars: IAvatar[];
   socket: any;
-  socketUserId: any;
+  userData: IUserData;
   setNearbyPlayers: React.Dispatch<React.SetStateAction<string[]>>;
   userChat: string;
   userChatVisible: boolean;
@@ -46,7 +46,7 @@ const HeroGrid = ({
   updateHeroPosition,
   setCurrentDirection,
   usersAvatars,
-  socketUserId,
+  userData,
   setNearbyPlayers,
   userChat,
   userChatVisible,
@@ -82,7 +82,7 @@ const HeroGrid = ({
 
   const isWithinRange = (
     { x1, y1 }: { x1: number; y1: number },
-    { x2, y2 }: { x2: number; y2: number }
+    { x2, y2 }: { x2: number; y2: number },
   ) => {
     let dx = x1 - x2;
     let dy = y1 - y2;
@@ -122,11 +122,11 @@ const HeroGrid = ({
 
   const handleNearbyUsers = (x: number, y: number) => {
     const nearbyUsers = usersAvatars
-      .filter((user) => user.id !== socketUserId)
+      .filter((user) => user.userId !== userData.userId)
       .filter((user) =>
-        isWithinRange({ x1: x, y1: y }, { x2: user.x, y2: user.y })
+        isWithinRange({ x1: x, y1: y }, { x2: user.x, y2: user.y }),
       )
-      .map((user) => user.id);
+      .map((user) => user.userId);
     setNearbyPlayers(nearbyUsers);
     // console.log(nearbyUsers);
     if (nearbyUsers.length > 0) {
@@ -151,22 +151,22 @@ const HeroGrid = ({
     // console.log("usersAvatars", usersAvatars);
     if (!socket) return;
 
-    const handleLastPosition = (data: any) => {
-      // console.log("last position on socket repsone", data);
+    // const handleLastPosition = (data: any) => {
+    //   // console.log("last position on socket repsone", data);
 
-      position.current = {
-        x: Number(data.x),
-        y: Number(data.y),
-      };
-      currentDirection.current = data.direction;
-      setIsSpawned(true);
-      updateHeroPosition(position.current.x, position.current.y);
-      // console.log("position on socket repsone", position.current);
-    };
+    //   position.current = {
+    //     x: Number(data.x),
+    //     y: Number(data.y),
+    //   };
+    //   currentDirection.current = data.direction;
+    //   setIsSpawned(true);
+    //   updateHeroPosition(position.current.x, position.current.y);
+    //   // console.log("position on socket repsone", position.current);
+    // };
 
-    socket.on("last-position", handleLastPosition);
+    // socket.on("last-position", handleLastPosition);
     return () => {
-      socket.off("last-position", handleLastPosition);
+      // socket.off("last-position", handleLastPosition);
     };
   }, [socket]); // when the socket is connected via server its start the .on listening
 
@@ -186,7 +186,7 @@ const HeroGrid = ({
       const isBlocking = isPlayerBlocking(
         newTarget.x,
         newTarget.y,
-        usersAvatars
+        usersAvatars,
       );
       return isBlocking;
     };
@@ -211,7 +211,7 @@ const HeroGrid = ({
         position.current,
         targetPosition.current,
         MOVE_SPEED,
-        delta
+        delta,
       );
 
       position.current = newPosition;

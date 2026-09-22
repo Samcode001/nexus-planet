@@ -11,19 +11,17 @@ import HeroGrid from "./HeroGrid";
 // import map from "../assets/tilemap.png";
 import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE } from "../constants/game-world";
 import OtherAvatars from "./OtherAvatars";
-import type { Direction, selectedAvatar } from "../types/common";
+import type {
+  Direction,
+  IAvatar,
+  IncomingMessageData,
+  IUserData,
+  selectedUser,
+} from "../types/common";
 import Camera from "./Camera";
 import { useBootStore } from "../store/bootstore";
 import { wsManager } from "../socket/wsManager";
-
-interface IAvatar {
-  id: string;
-  x: number;
-  y: number;
-  direction: Direction;
-  avatar: string;
-  username: string;
-}
+import type { AppDispatch } from "../redux/store";
 
 interface IMainContainerProps {
   canvasSize: {
@@ -32,28 +30,38 @@ interface IMainContainerProps {
     scale: number;
   };
   userSprite: string;
-  socket: any;
-  socketUserId: string;
-  socketAvatarId: string;
-  socketUsername: string;
+  socket: WebSocket;
+  userData: IUserData;
   chatInput: string;
   userChat: string;
   userChatVisible: boolean;
-  dispatch: any;
+  dispatch: AppDispatch;
   isNearby: boolean;
   getJoystickDirection: any;
   setNearbyPlayers: React.Dispatch<React.SetStateAction<string[]>>;
   nearbyPlayers: string[];
   setUsersAvatars: React.Dispatch<React.SetStateAction<IAvatar[]>>;
   usersAvatars: IAvatar[];
-  onScreenPos: any;
+  onScreenPos: React.RefObject<
+    Record<
+      string,
+      {
+        x: number;
+        y: number;
+      }
+    >
+  >;
   setSelectedOtherUserAvatar: React.Dispatch<
-    React.SetStateAction<selectedAvatar[]>
+    React.SetStateAction<selectedUser>
   >;
   setMultiplePopupsVisible: React.Dispatch<
     React.SetStateAction<Record<string, boolean>>
   >;
-  multiplePopupsVisible: any;
+  multiplePopupsVisible: Record<string, boolean>;
+  incomingMessageData: IncomingMessageData;
+  setIncomingMessageData: React.Dispatch<
+    React.SetStateAction<IncomingMessageData>
+  >;
 }
 
 const MainContainer = ({
@@ -61,9 +69,7 @@ const MainContainer = ({
   userSprite,
   children,
   socket,
-  socketUserId,
-  socketAvatarId,
-  socketUsername,
+  userData,
   userChat,
   userChatVisible,
   dispatch,
@@ -77,6 +83,8 @@ const MainContainer = ({
   setSelectedOtherUserAvatar,
   setMultiplePopupsVisible,
   multiplePopupsVisible,
+  incomingMessageData,
+  setIncomingMessageData,
 }: PropsWithChildren<IMainContainerProps>) => {
   const [currentDirection, setCurrentDirection] = useState<Direction | null>(
     null,
@@ -88,46 +96,50 @@ const MainContainer = ({
   // const joyStickDirectionRefconst  = useRef<Direction | null>(null);
 
   // ------------------- Chat codes ----------------
-  const [chatMessage, setChatMessage] = useState("");
-  const [chatMessageId, setChatMessageId] = useState("");
-  const [isBubbleVisible, setIsBubbleVisible] = useState(false);
 
-  const bubbleTimer = import.meta.env.VITE_CHAT_BUBBLE_TIMEOUT;
+  // const bubbleTimer = import.meta.env.VITE_CHAT_BUBBLE_TIMEOUT;
 
   // const { socket, socketUserId, socketAvatarId } = Socket();
 
   useEffect(() => {
     if (!socket) return;
 
-    socket.emit("move-avatar", {
-      id: socketUserId,
-      username: socketUsername,
-      x: heroPosition.x * TILE_SIZE,
-      y: heroPosition.y * TILE_SIZE,
-      direction: currentDirection,
-      avatar: socketAvatarId,
-    });
-    wsManager.sendMessage("move_avatar", {
-      userId: socketUserId,
-      username: socketUsername,
-      x: heroPosition.x * TILE_SIZE,
-      y: heroPosition.y * TILE_SIZE,
-      direction: currentDirection,
-      avatar: socketAvatarId,
-      roomId:"1"
+    // socket.emit("move-avatar", {
+    //   id: socketUserId,
+    //   username: socketUsername,
+    //   x: heroPosition.x * TILE_SIZE,
+    //   y: heroPosition.y * TILE_SIZE,
+    //   direction: currentDirection,
+    //   avatar: socketAvatarId,
+    // });
+    wsManager.sendMessage({
+      type: "move_avatar",
+      payload: {
+        userId: userData.userId!,
+        username: userData.username!,
+        x: heroPosition.x * TILE_SIZE,
+        y: heroPosition.y * TILE_SIZE,
+        direction: currentDirection!,
+        avatar: userData.avatarId!,
+        roomId: "1",
+      },
     });
   }, [heroPosition]);
+
+  // useEffect(() => {
+  //   console.log("usersAvatars", usersAvatars);
+  // }, [usersAvatars]);
 
   useEffect(() => {
     if (!socket) return;
     const handleOthersAvatarMove = (data: IAvatar) => {
-      // console.log(data);
+      // console.log("hanldeOther avatr", data);
       setUsersAvatars((prev) => {
-        const index = prev.findIndex((item) => item.id === data.id);
+        const index = prev.findIndex((item) => item.userId === data.userId);
         if (index !== -1) {
           let updated = [...prev];
           updated[index] = {
-            id: data.id,
+            userId: data.userId,
             x: data.x,
             y: data.y,
             direction: data.direction,
@@ -144,7 +156,7 @@ const MainContainer = ({
           return [
             ...prev,
             {
-              id: data.id,
+              userId: data.userId,
               x: data.x,
               y: data.y,
               direction: data.direction,
@@ -155,35 +167,72 @@ const MainContainer = ({
       });
     };
 
-    const handleUserDisconnected = (userId: string) => {
+    const handleUserDisconnected = (data: { userId: string }) => {
       // console.log("user disconnected", userId);
       setUsersAvatars((prev) => {
-        const index = prev.findIndex((item) => item.id === userId);
-        if (index !== -1) {
-          prev.splice(index, 1);
-          return prev;
-        } else return prev;
+        // const index = prev.findIndex((item) => item.userId === data.userId);
+        // if (index !== -1) {
+        //   prev.splice(index, 1);
+        //   return prev;
+        // } else return prev;
+        return prev.filter((avatar) => avatar.userId !== data.userId);
       });
     };
 
-    const handleChatMessage = (data: any) => {
-      // console.log(data);
-      setChatMessageId(data.id);
-      setChatMessage(data.chat);
-      setIsBubbleVisible(true);
+    // const handleChatMessage = (data: any) => {
+    //   // console.log(data);
+    //   setChatMessageId(data.id);
+    //   setChatMessage(data.chat);
+    //   setIsBubbleVisible(true);
+    //   setTimeout(() => {
+    //     setIsBubbleVisible(false);
+    //   }, bubbleTimer);
+    // };
+
+    const handleProximityChat = (data: {
+      senderId: string;
+      senderUsername: string;
+      content: string;
+      roomId: string;
+      isNotification: boolean;
+      conversationId: string;
+      messageRequestId: string;
+    }) => {
+      // console.log("proximity message", data);
+      const {
+        senderId,
+        senderUsername,
+        content,
+        isNotification,
+        messageRequestId,
+      } = data;
+
+      setIncomingMessageData((prev) => ({
+        ...prev,
+        senderId,
+        senderUsername,
+        content,
+        messageRequestId,
+        isNotificationVisible: isNotification,
+      }));
+
       setTimeout(() => {
-        setIsBubbleVisible(false);
-      }, bubbleTimer);
+        setIncomingMessageData((prev) => ({
+          ...prev,
+          isNotificationVisible: false,
+        }));
+      }, 25000);
     };
 
-    socket.on("other-avatar-move", handleOthersAvatarMove);
-    socket.on("user-disconnected", handleUserDisconnected);
-    socket.on("chat-message", handleChatMessage);
+    wsManager.subscribe("other_avatar_move", handleOthersAvatarMove);
+    wsManager.subscribe("user_disconnect", handleUserDisconnected);
+    wsManager.subscribe("proximity_message", handleProximityChat);
 
     return () => {
-      socket.off("other-avatar-move", handleOthersAvatarMove);
-      socket.off("user-disconnected", handleUserDisconnected);
-      socket.off("chat-message", handleChatMessage);
+      wsManager.unsubscribe("other_avatar_move", handleOthersAvatarMove);
+      wsManager.unsubscribe("user_disconnect", handleUserDisconnected);
+      wsManager.unsubscribe("proximity_message", handleProximityChat);
+      // wsManager.unsubscribe("chat_message", handleChatMessage);
     };
   }, [socket]); //  Your socket is created asynchronously, so when this effect runs:socket === null
   //So events never fireThe moment socket is created → listener is added.
@@ -259,7 +308,7 @@ const MainContainer = ({
             updateHeroPosition={updateHeroPosition}
             setCurrentDirection={setCurrentDirection}
             usersAvatars={usersAvatars}
-            socketUserId={socketUserId}
+            userData={userData}
             socket={socket}
             setNearbyPlayers={setNearbyPlayers}
             userChat={userChat}
@@ -272,27 +321,28 @@ const MainContainer = ({
           />
 
           {usersAvatars
-            .filter((avatar) => Boolean(avatar.id))
-            .map((avatar, index) => {
+            .filter((avatar) => Boolean(avatar.userId))
+            .map((avatar) => {
               return (
                 <OtherAvatars
-                  key={index}
+                  key={avatar.userId}
                   AVATAR_X_POS={avatar.x}
                   AVATAR_Y_POS={avatar.y}
                   AVATAR_DIRECTION={avatar.direction}
-                  avatarId={avatar.id}
+                  avatarId={avatar.userId}
                   AVATAR_IMAGE={avatar.avatar}
                   AVATAR_USERNAME={avatar.username}
                   nearbyPlayers={nearbyPlayers}
-                  chatMessage={chatMessage}
-                  isBubbleVisible={isBubbleVisible}
-                  chatMessageId={chatMessageId}
                   heroPosition={heroPosition}
                   isNearby={isNearby}
                   onScreenPos={onScreenPos}
                   setSelectedOtherUserAvatar={setSelectedOtherUserAvatar}
                   setMultiplePopupsVisible={setMultiplePopupsVisible}
                   multiplePopupsVisible={multiplePopupsVisible}
+                  incomingMessageData={incomingMessageData}
+                  setIncomingMessageData={setIncomingMessageData}
+                  userData={userData}
+                  dispatch={dispatch}
                 />
               );
             })}

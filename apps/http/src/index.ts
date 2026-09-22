@@ -1,11 +1,12 @@
+// import dotenv from "dotenv";
+// dotenv.config();
+import "dotenv/config";
 import express from "express";
-import dotenv from "dotenv";
-dotenv.config();
 import { router } from "./routes/v1";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRouter from "./routes/v1/userRoutes";
-
+import chatRouter from "./routes/v1/chatRouter";
 // import { userRouter } from "./routes/user.route";
 // import { errorHandler } from "./middlewares/errorHandler";
 
@@ -32,13 +33,15 @@ app.use(
       }
     },
     credentials: true,
-  })
+  }),
 );
 app.get("/", (_, res) => {
   res.send("<h1>Hello World</h1>");
 });
-app.use("/v1/auth", router);
-app.use("/v1/user", userRouter);
+app.use("/api/auth", router);
+app.use("/api/user", userRouter);
+app.use("/api/chat", chatRouter);
+
 // app.use(errorHandler);
 
 app.listen(process.env.PORT || 3000, () => {

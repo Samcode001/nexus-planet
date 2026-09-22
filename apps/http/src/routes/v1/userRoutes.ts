@@ -55,13 +55,13 @@ userRouter.put("/set-avatar", authenticateAccessToken, async (req, res) => {
   res.json({ message: "Avatar set Succesfully", user: userUpdate.avatarId });
 });
 
-userRouter.post("/socket", authenticateAccessToken, async (req, res) => {
+userRouter.get("/", authenticateAccessToken, async (req, res) => {
   // const userObject = (req as any).user;
   const userId = req.user?.id;
   const username = req.user?.username;
-  const token = jwt.sign({ id: userId, username: username }, SOCKET_SECRET, {
-    expiresIn: "10m",
-  });
+  // const token = jwt.sign({ id: userId, username: username }, SOCKET_SECRET, {
+  //   expiresIn: "10m",
+  // });
   const user = await client.user.findUnique({
     where: {
       id: userId,
@@ -70,7 +70,6 @@ userRouter.post("/socket", authenticateAccessToken, async (req, res) => {
   // console.log(token, user);
   if (!user) return res.status(404).json({ message: "User not found" });
   res.json({
-    token,
     userId: userId,
     avatarId: user.avatarId,
     username: user.username,

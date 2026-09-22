@@ -27,7 +27,7 @@ const Avatars = () => {
 
   const handleSubmit = async () => {
     try {
-      const res = await axiosAuth.put("/set-avatar", {
+      const res = await axiosAuth.put("user/set-avatar", {
         avatar: selectedAvatar,
       });
       if (res.status === 200) navigate("/arena");

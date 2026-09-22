@@ -1,73 +1,98 @@
 import { Stage } from "@pixi/react";
 import useDimensions from "../hook/useDimensions";
 import { useEffect, useRef, useState } from "react";
-// import { io, type Socket } from "socket.io-client";
 import { useAxiosAuth } from "../api/axiosClient";
 import MainContainer from "./MainContainer";
-import { Box, Container } from "@mui/material";
-import ChatInput from "./ChatInput";
+import { Box } from "@mui/material";
+// import ChatInput from "./ChatInput";
 import { useSelector } from "react-redux";
 import type { RootState } from "../redux/store";
 import { useAppDispatch } from "../redux/hook";
-import type { Direction, selectedAvatar } from "../types/common";
+import type {
+  Direction,
+  IAvatar,
+  IConversation,
+  IncomingMessageData,
+  selectedUser,
+} from "../types/common";
 import { setJoyDirection } from "../redux/Proximity/proximitySlice";
 import useJoyStick from "../hook/useJoyStick";
-import AvatarVoicePrompt from "./AvatarVoicePrompt";
-import IncomingCallPopup from "./IncomigCallPopup";
-
-interface IAvatar {
-  id: string;
-  x: number;
-  y: number;
-  direction: Direction;
-  avatar: string;
-  username: string;
-}
+import AvatarPrompts from "./AvatarPrompts";
+// import IncomingCallPopup from "./IncomigCallPopup";
+import { addConversation, setUserConversations } from "../redux/user/userSlice";
+import { wsManager } from "../socket/wsManager";
+import FloatingChatWidget from "./FloatingChatWidget";
+import ConversationBar from "./ConversationBar";
 
 const Arena = ({
   socket,
   mobileView,
   setIsUserPermisssion,
-  offerVisible,
-  setOfferVisible,
+  conversationBarVisible,
 }: any) => {
   const isNearby = useSelector((state: RootState) => state.proximity.isNearby);
   const canvasSize = useDimensions();
   const [userSprite, setUserSprite] = useState<string>("/avatars/hero.png");
   const [userChat, setUserchat] = useState("");
-  const [userChatId, setUserChatId] = useState<Record<string, boolean>>({});
+  // const [userChatId, setUserChatId] = useState<Record<string, boolean>>({});
   const [userChatVisible, setUserchatVisible] = useState(false);
   const [usersAvatars, setUsersAvatars] = useState<IAvatar[]>([]);
   const [nearbyPlayers, setNearbyPlayers] = useState<string[]>([]);
   const [screenPos, setScreenPos] = useState<
     Record<string, { x: number; y: number }>
   >({});
-  const [selectedOtherUserAvatar, setSelectedOtherUserAvatar] = useState<
-    selectedAvatar[]
-  >([]);
+  const [selectedOtherUserAvatar, setSelectedOtherUserAvatar] =
+    useState<selectedUser>(null);
   const [multiplePopupsVisible, setMultiplePopupsVisible] = useState<
     Record<string, boolean>
   >({});
 
+  // ------ Chat States ---------------------------------------
+  const [chatInput, setChatInput] = useState("");
+  const [_, setChatOpen] = useState(false);
+  const [incomingMessageData, setIncomingMessageData] =
+    useState<IncomingMessageData>({
+      senderId: "",
+      senderUsername: "",
+      content: "",
+      isBubbleVisible: false,
+      isNotificationVisible: false,
+      isMessageRequestAccepted: false,
+      messageRequestId: "",
+    });
+
   const onScreenPos = useRef<Record<string, { x: number; y: number }>>({});
   // const multiplePopupsVisibleRef = useRef<boolean>(false);
   const dispatch = useAppDispatch();
-  const socketAvatarId = useSelector(
-    (state: RootState) => state.socket.avatarId,
-  )!;
-  const socketUserId = useSelector((state: RootState) => state.socket.userId)!;
-  const socketUsername = useSelector(
-    (state: RootState) => state.socket.username,
-  )!;
+
+  const userData = useSelector((state: RootState) => state.user);
   const axiosAuth = useAxiosAuth();
 
   // console.log(socketToken, socketUserId);
 
   const getuserAvatar = async () => {
-    const res = await axiosAuth.get("/avatar");
+    const res = await axiosAuth.get("user/avatar");
     if (res.status === 200 && res.data.avatarId) {
       let avatar = `/avatars/${res.data.avatarId}.png`;
       setUserSprite(avatar);
+    }
+  };
+
+  const getUserConversations = async () => {
+    try {
+      const { data } = await axiosAuth.get("chat/conversation");
+
+      // console.log("conversations", data, data.conversations);
+      dispatch(setUserConversations(data.conversations));
+      const conversationsId = data.conversations.map(
+        (elem: IConversation) => elem.id,
+      );
+
+      if (conversationsId.length > 0)
+        // wsManager.joinConversations(conversationsId);
+        wsManager.setConversations(conversationsId);
+    } catch (error) {
+      console.log("Error on getting conversations", error);
     }
   };
 
@@ -85,6 +110,8 @@ const Arena = ({
   // const { socket, socketUserId, socketAvatarId } = Socket();
   useEffect(() => {
     getuserAvatar();
+    getUserConversations();
+
     let raf: number;
     let last = 0;
 
@@ -117,9 +144,10 @@ const Arena = ({
   }, []);
 
   useEffect(() => {
-    // console.log(selectedOtherUserAvatar);
-    // console.log(multiplePopupsVisible);
-  }, [selectedOtherUserAvatar]);
+    // console.log("SeleceddOtherUSeravatar", selectedOtherUserAvatar);
+    // console.log("multiplePopupsVisible", multiplePopupsVisible);
+    // console.log("userData", userData);
+  }, [userData]);
 
   useEffect(() => {
     if (usersAvatars.length === 0) return;
@@ -127,9 +155,89 @@ const Arena = ({
   }, [usersAvatars, isNearby]);
   // console.log(useBootStore.getState().ready);
 
-  // ------ Chat States ---------------------------------------
-  const [chatInput, setChatInput] = useState("");
-  const [chatOpen, setChatOpen] = useState(false);
+  // the accepting of a request message send by a another user
+  useEffect(() => {
+    const handleMessageRequestAccepted = async () => {
+      try {
+        if (!incomingMessageData.isMessageRequestAccepted) return;
+
+        console.log(
+          "incoming message accepted initiating conversation creation .",
+        );
+
+        const { data } = await axiosAuth.post(
+          `chat/message-request/${incomingMessageData.messageRequestId}/accept`,
+          {
+            name: `${incomingMessageData.senderUsername}&${userData.username}`,
+          },
+        );
+
+        if (data.conversation) {
+          console.log("conversation created");
+          dispatch(addConversation(data.conversation));
+
+          wsManager.sendMessage({
+            type: "join_conversation",
+            payload: {
+              conversationId: data.conversation.id,
+            },
+          });
+
+          wsManager.sendMessage({
+            type: "message_request_accepted",
+            payload: {
+              senderId: incomingMessageData.senderId,
+              conversation: data.conversation,
+              roomId: userData.roomId,
+            },
+          });
+        }
+      } catch (error) {
+        console.log("Error on creating conversation", error);
+      }
+    };
+
+    handleMessageRequestAccepted();
+  }, [incomingMessageData.isMessageRequestAccepted]);
+
+  //sender side function when reciver accepts the message ,sender recive the conversation to join it
+  useEffect(() => {
+    const handleConversationCreated = async (data: {
+      conversation: IConversation;
+      senderId: string;
+    }) => {
+      // console.log("entered MessageRequestAccept funtion",data);
+
+      dispatch(addConversation(data.conversation));
+
+      // joining conversation which created by reciver who accepts the message
+      wsManager.sendMessage({
+        type: "join_conversation",
+        payload: {
+          conversationId: data.conversation.id,
+        },
+      });
+
+      setSelectedOtherUserAvatar((prev) => {
+        // console.log("prev", prev, "data", data);
+        // if (prev?.userId !== data.senderId) return prev;
+        return {
+          ...prev!,
+          conversationId: data.conversation.id,
+        };
+      });
+      console.log("Conversation joined");
+    };
+
+    wsManager.subscribe("message_request_accepted", handleConversationCreated);
+
+    return () => {
+      wsManager.unsubscribe(
+        "message_request_accepted",
+        handleConversationCreated,
+      );
+    };
+  }, []);
 
   // ------------ Joy stick movments
 
@@ -162,9 +270,7 @@ const Arena = ({
             canvasSize={canvasSize}
             userSprite={userSprite}
             socket={socket}
-            socketAvatarId={socketAvatarId}
-            socketUserId={socketUserId}
-            socketUsername={socketUsername}
+            userData={userData}
             chatInput={chatInput}
             userChat={userChat}
             userChatVisible={userChatVisible}
@@ -179,47 +285,69 @@ const Arena = ({
             setSelectedOtherUserAvatar={setSelectedOtherUserAvatar}
             setMultiplePopupsVisible={setMultiplePopupsVisible}
             multiplePopupsVisible={multiplePopupsVisible}
+            incomingMessageData={incomingMessageData}
+            setIncomingMessageData={setIncomingMessageData}
           />
         </Stage>
-        {selectedOtherUserAvatar.map((avatar, index) => (
-          <ChatInput
-            key={index}
-            chatInput={chatInput}
-            setChatInput={setChatInput}
-            chatOpen={avatar?.chatOpen!}
-            setUserchat={setUserchat}
-            setUserchatVisible={setUserchatVisible}
+        {/* {selectedOtherUserAvatar.map((avatar) => (
+        ))} */}
+        {/* <ChatInput
+          // key={sel?.id}
+          chatInput={chatInput}
+          setChatInput={setChatInput}
+          chatOpen={selectedOtherUserAvatar?.chatOpen!}
+          setUserchat={setUserchat}
+          setUserchatVisible={setUserchatVisible}
+          selectedOtherUserAvatar={selectedOtherUserAvatar}
+          // setChatOpen={setChatOpen}
+          avatarUsername={selectedOtherUserAvatar?.username!}
+          setSelectedOtherUserAvatar={setSelectedOtherUserAvatar}
+        /> */}
+        <Box sx={{ position: "fixed", top: 0, zIndex: 1300 }}>
+          <ConversationBar
+            conversationBarVisible={conversationBarVisible}
+            // isChatOpen={selectedOtherUserAvatar?.chatOpen}
             selectedOtherUserAvatar={selectedOtherUserAvatar}
-            setChatOpen={setChatOpen}
-            avatarUsername={avatar?.username!}
             setSelectedOtherUserAvatar={setSelectedOtherUserAvatar}
+            setChatOpen={setChatOpen}
           />
-        ))}
+        </Box>
+
+        <FloatingChatWidget
+          isChatOpen={selectedOtherUserAvatar?.chatOpen}
+          selectedOtherUserAvatar={selectedOtherUserAvatar}
+          setSelectedOtherUserAvatar={setSelectedOtherUserAvatar}
+          setUserChat={setUserchat}
+          setUserChatVisible={setUserchatVisible}
+          setChatInput={setChatInput}
+          chatInput={chatInput}
+          setIncomingMessageData={setIncomingMessageData}
+        />
         {usersAvatars.map((avatar) => {
           const pos = screenPos[avatar.username];
           if (!pos) return null;
           return (
-            <Box key={avatar.id}>
-              <AvatarVoicePrompt
+            <Box key={avatar.userId}>
+              <AvatarPrompts
                 x={pos.x}
                 y={pos.y}
                 selectedOtherUserAvatar={selectedOtherUserAvatar}
                 visible={multiplePopupsVisible[avatar.username] ?? false}
                 setIsUserPermisssion={setIsUserPermisssion}
-                avatarId={avatar.id}
+                avatarId={avatar.userId}
                 avatarUsername={avatar.username}
                 setChatOpen={setChatOpen}
                 setSelectedOtherUserAvatar={setSelectedOtherUserAvatar}
                 setMultiplePopupsVisible={setMultiplePopupsVisible}
               />
-              <IncomingCallPopup
+              {/* <IncomingCallPopup
                 x={pos.x}
                 y={pos.y}
                 visible={offerVisible}
                 setOfferVisible={setOfferVisible}
                 caller={{ from: avatar.username, username: avatar.username }}
-                avatarId={avatar.id}
-              />
+                avatarId={avatar.userId}
+              /> */}
             </Box>
           );
         })}

@@ -87,6 +87,9 @@ importers:
       '@reduxjs/toolkit':
         specifier: ^2.11.1
         version: 2.11.1(react-redux@9.2.0(@types/react@19.1.8)(react@18.3.1)(redux@5.0.1))(react@18.3.1)
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@tippyjs/react':
         specifier: ^4.2.6
         version: 4.2.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -197,12 +200,18 @@ importers:
 
   apps/ws:
     dependencies:
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@types/express':
         specifier: ^5.0.3
         version: 5.0.3
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
+      axios:
+        specifier: ^1.13.2
+        version: 1.13.2
       bufferutil:
         specifier: ^4.0.1
         version: 4.1.0
@@ -277,6 +286,8 @@ importers:
       ioredis:
         specifier: ^5.8.2
         version: 5.8.2
+
+  packages/types: {}
 
   packages/typescript-config: {}
 
