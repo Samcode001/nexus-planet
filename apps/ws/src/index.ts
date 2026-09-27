@@ -93,6 +93,78 @@ wss.on("connection", async (ws: CustomWebsocket, req: Request) => {
       handleTyping(data.payload, ws, conversations);
     }
 
+    if (data.type === "voice_offer") {
+      const { recieverId, offer, conversationId } = data.payload;
+
+      const conversation = conversations[conversationId];
+      // if(conversation)
+      conversation?.forEach((client) => {
+        if (client.userId === recieverId) {
+          client.send(
+            JSON.stringify({
+              type: "voice_offer",
+              payload: {
+                offer,
+                senderId: ws.userId,
+                conversationId,
+              },
+            }),
+          );
+        }
+      });
+    }
+    if (data.type === "voice_answer") {
+      const { answer, senderId, conversationId } = data.payload;
+
+      const conversaation = conversations[conversationId];
+
+      conversaation?.forEach((client) => {
+        if (client.userId === senderId) {
+          client.send(
+            JSON.stringify({
+              type: "voice_answer",
+              payload: {
+                answer,
+              },
+            }),
+          );
+        }
+      });
+    }
+
+    if (data.type === "voice_ice") {
+      const { candidate, recieverId, conversationId } = data.payload;
+      const conversation = conversations[conversationId];
+
+      conversation?.forEach((client) => {
+        if (client.userId === recieverId)
+          client.send(
+            JSON.stringify({
+              type: "voice_ice",
+              payload: {
+                candidate,
+              },
+            }),
+          );
+      });
+    }
+    if (data.type === "voice_offer_recieved") {
+      const { recieverId, conversationId } = data.payload;
+      const conversation = conversations[conversationId];
+      // if(conversation)
+      conversation?.forEach((client) => {
+        if (client.userId === recieverId) {
+          client.send(
+            JSON.stringify({
+              type: "voice_offer_recieved",
+              payload: {
+                recieverId,
+              },
+            }),
+          );
+        }
+      });
+    }
     if (data.type === "ping") {
       ws.send(
         JSON.stringify({

@@ -18,7 +18,7 @@ import type {
 import { setJoyDirection } from "../redux/Proximity/proximitySlice";
 import useJoyStick from "../hook/useJoyStick";
 import AvatarPrompts from "./AvatarPrompts";
-// import IncomingCallPopup from "./IncomigCallPopup";
+import IncomingCallPopup from "./IncomigCallPopup";
 import { addConversation, setUserConversations } from "../redux/user/userSlice";
 import { wsManager } from "../socket/wsManager";
 import FloatingChatWidget from "./FloatingChatWidget";
@@ -29,6 +29,10 @@ const Arena = ({
   mobileView,
   setIsUserPermisssion,
   conversationBarVisible,
+  incomingCallData,
+  setIncomingCallData,
+  handleIncomingCall,
+  startCall,
 }: any) => {
   const isNearby = useSelector((state: RootState) => state.proximity.isNearby);
   const canvasSize = useDimensions();
@@ -339,15 +343,21 @@ const Arena = ({
                 setChatOpen={setChatOpen}
                 setSelectedOtherUserAvatar={setSelectedOtherUserAvatar}
                 setMultiplePopupsVisible={setMultiplePopupsVisible}
+                startCall={startCall}
               />
-              {/* <IncomingCallPopup
+              <IncomingCallPopup
                 x={pos.x}
                 y={pos.y}
-                visible={offerVisible}
-                setOfferVisible={setOfferVisible}
+                visible={
+                  incomingCallData.showNotification &&
+                  incomingCallData.senderId === avatar.userId
+                }
+                setIncomingCallData={setIncomingCallData}
                 caller={{ from: avatar.username, username: avatar.username }}
                 avatarId={avatar.userId}
-              /> */}
+                handleIncomingCall={handleIncomingCall}
+                incomingCallData={incomingCallData}
+              />
             </Box>
           );
         })}

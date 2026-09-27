@@ -2,14 +2,17 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../redux/store";
 import { Typography } from "@mui/material";
 import { memo, useEffect } from "react";
+import type { IncomingCallData } from "../types/common";
 
 type CallPopup = {
   caller: { from: string; username: string };
   visible: boolean;
   x: number;
   y: number;
-  setOfferVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  setIncomingCallData: React.Dispatch<React.SetStateAction<IncomingCallData>>;
   avatarId: string;
+  handleIncomingCall: any;
+  incomingCallData: IncomingCallData;
 };
 
 const IncomingCallPopup = ({
@@ -17,11 +20,13 @@ const IncomingCallPopup = ({
   y,
   caller,
   visible,
-  setOfferVisible,
+  setIncomingCallData,
   // avatarId,
+  handleIncomingCall,
+  incomingCallData,
 }: CallPopup) => {
   const isMobileView = useSelector(
-    (state: RootState) => state.proximity.isMobileView
+    (state: RootState) => state.proximity.isMobileView,
   );
   // const USER_ID = useSelector((state: RootState) => state.socket.userId);
 
@@ -32,13 +37,20 @@ const IncomingCallPopup = ({
   const handleAnswer = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log("answer");
-    setOfferVisible(false);
+    // setIncomi(false);
+    handleIncomingCall(
+      incomingCallData.conversationId,
+      incomingCallData.senderId,
+      incomingCallData.offer,
+    );
+    setIncomingCallData((prev) => ({ ...prev, showNotification: false }));
   };
 
   const handleReject = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log("reject");
-    setOfferVisible(false);
+    // setOfferVisible(false);
+    setIncomingCallData((prev) => ({ ...prev, showNotification: false }));
   };
 
   useEffect(() => {
@@ -52,9 +64,10 @@ const IncomingCallPopup = ({
         left: leftDevice,
         top: -30,
         transform: `translate3d(${Math.round(x)}px, ${Math.round(
-          y + lift
+          y + lift,
         )}px, 0)`,
         opacity: visible ? 1 : 0,
+        display: visible ? "block" : "none",
         pointerEvents: "none",
         zIndex: 9999,
         transition:
@@ -95,6 +108,7 @@ const IncomingCallPopup = ({
               ? "translate(22px, -1px) scale(1)"
               : "translate(0px, 0px) scale(0.7)",
             opacity: visible ? 1 : 0,
+            display: visible ? "block" : "none",
             transition:
               "transform 220ms cubic-bezier(.2,.9,.2,1), opacity 160ms ease-out",
             padding: "4px 10px",
@@ -119,6 +133,7 @@ const IncomingCallPopup = ({
               ? "translate(-42px, -1px) scale(1)"
               : "translate(0px, 0px) scale(0.7)",
             opacity: visible ? 1 : 0,
+            display: visible ? "block" : "none",
             transition:
               "transform 220ms cubic-bezier(.2,.9,.2,1), opacity 160ms ease-out",
             padding: "4px 10px",

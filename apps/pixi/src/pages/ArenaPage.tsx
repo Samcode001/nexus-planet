@@ -1,5 +1,5 @@
 // import React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 // import { useAxiosAuth } from "../api/axiosClient";
 import Arena from "../components/Arena";
 // import { io, type Socket } from "socket.io-client";
@@ -14,10 +14,11 @@ import { useSelector } from "react-redux";
 import { useBootStore } from "../store/bootstore";
 // import { Box } from "@mui/material";
 import PlanetOverlay from "./ArenaOverlay";
-// import usePeerConnection from "../hook/usePeerConnection";
+import usePeerConnection from "../hook/usePeerConnection";
 import { wsManager } from "../socket/wsManager";
 // import ConversationBar from "../components/ConversationBar";
 import GameNavbar from "../components/GameNavbar";
+import type { IncomingCallData } from "../types/common";
 
 // const API = import.meta.env.VITE_USER_API_URL;
 // const SOCKET_API = import.meta.env.VITE_SOCKET_API_URL;
@@ -30,10 +31,16 @@ const ArenaPage = () => {
   const [avatarLaoding, setAvatarLoading] = useState(false);
   const [mobileView, setMobileView] = useState(false);
   const [_, setIsUserPermisssion] = useState({
+    userId: null,
     permission: false,
     userStream: null,
   });
-  const [offerVisible, setOfferVisible] = useState(false);
+  const [incomingCallData, setIncomingCallData] = useState<IncomingCallData>({
+    conversationId: "",
+    senderId: "",
+    offer: null,
+    showNotification: false,
+  });
   const [conversationBarVisible, setConversationBarVisible] =
     useState<boolean>(false);
 
@@ -46,41 +53,79 @@ const ArenaPage = () => {
   const avatarReady = useBootStore((state) => state.ready.AVATARS);
   const pixiReady = useBootStore((state) => state.ready.PIXI);
 
-  // const pcRef = useRef<Record<string, RTCPeerConnection>>({});
+  const pcRef = useRef<RTCPeerConnection>(null);
+  const remoteAudioElement = useRef<HTMLAudioElement | null>(null);
 
-  // const { handleAudioToggle, handleIncomingAudio } = usePeerConnection(
-  //   socket!,
-  //   pcRef,
-  // );
+  const { startCall, handleIncomingCall, handleCandidate, handleVoiceAnswer } =
+    usePeerConnection(pcRef, remoteAudioElement);
 
-  // useEffect(() => {
-  //   // handlng incoming offer or incoming audio
-  //   if (!socket) return;
+  useEffect(() => {
+    // handlng incoming offer or incoming audio
+    // if (!socket) return;
 
-  //   // socket.on("voice-offer", handleIncomingAudio);
-  //   // socket.on("voice-answer", async ({ answer, userId }) => {
-  //   //   const pc = pcRef.current[userId];
-  //   //   if (!pc) return;
-  //   //   await pc.setRemoteDescription(answer);
-  //   // });
+    // const handleVoiceAnswer = async (data: { answer: any; userId: any }) => {
+    //   const pc = pcRef.current;
+    //   if (!pc) return;
+    //   await pc.setRemoteDescription(data.answer);
+    // };
 
-  //   // socket.on("voice-ice", async ({ candidate, userId }) => {
-  //   //   const pc = pcRef.current[userId];
-  //   //   await pc.addIceCandidate(candidate);
-  //   // });
+    // const handleCandidate = async (data: {
+    //   candidate: any;
+    //   userId: string;
+    // }) => {
+    //   const pc = pcRef.current;
+    //   if (!pc) return;
+    //   await pc.addIceCandidate(data.candidate);
+    // };
 
-  //   // socket.on("voice-call-offer", async ({ userId }) => {
-  //   //   setOfferVisible(true);
-  //   //   console.log(userId);
-  //   // });
+    // const handleVoiceofferRecieved = (data: { recieverId: string }) => {
+    //   setIncomingCallData((prev) => ({ ...prev, showNotification: true }));
+    //   console.log(data.recieverId);
+    // };
 
-  //   // return () => {
-  //   //   socket.off("voice-offer");
-  //   //   socket.off("voice-answer");
-  //   //   socket.off("voice-ice");
-  //   //   if (pcRef.current[USER_ID!]) pcRef.current[USER_ID!].close();
-  //   // };
-  // }, [socket]);
+    const storeIncomingCallData = (data: {
+      conversationId: string;
+      offer: any;
+      senderId: string;
+    }) => {
+      setIncomingCallData({
+        conversationId: data.conversationId,
+        senderId: data.senderId,
+        offer: data.offer,
+        showNotification: true,
+      });
+    };
+
+    wsManager.subscribe("voice_offer", storeIncomingCallData);
+    wsManager.subscribe("voice_answer", handleVoiceAnswer);
+    wsManager.subscribe("voice_ice", handleCandidate);
+    // wsManager.subscribe("voice_offer_recieved", handleVoiceofferRecieved);
+
+    // socket.on("voice-offer", handleIncomingAudio);
+    // socket.on("voice-answer", async ({ answer, userId }) => {
+    //   const pc = pcRef.current[userId];
+    //   if (!pc) return;
+    //   await pc.setRemoteDescription(answer);
+    // });
+
+    // socket.on("voice-ice", async ({ candidate, userId }) => {
+    //   const pc = pcRef.current[userId];
+    //   await pc.addIceCandidate(candidate);
+    // });
+
+    // socket.on("voice-call-offer", async ({ userId }) => {
+    //   setOfferVisible(true);
+    //   console.log(userId);
+    // });
+
+    return () => {
+      wsManager.unsubscribe("voice_offer", storeIncomingCallData);
+      wsManager.unsubscribe("voice_answer", handleVoiceAnswer);
+      wsManager.unsubscribe("voice_ice", handleCandidate);
+      // wsManager.unsubscribe("voice_offer_recieved", handleVoiceofferRecieved);
+      // if (pcRef.current[USER_ID!]) pcRef.current[USER_ID!].close();
+    };
+  }, []);
 
   // useEffect(() => {
   //   if (!isNearby) return;
@@ -89,9 +134,9 @@ const ArenaPage = () => {
   //     try {
   //       // alert("want to make peer conn");
   //       if (isUserPermission.permission) {
-  //         console.log("user permission gave", USER_ID);
+  //         console.log("user permission gave");
 
-  //         // await hanldeAudio(USER_ID!, isUserPermission.userStream);
+  //         await startCall(isUserPermission.userStream);
   //       }
   //       // else
   //       //   console.log("Not permissiond")
@@ -100,12 +145,12 @@ const ArenaPage = () => {
   //     }
   //   })();
 
-  //   window.addEventListener("keydown", handleAudioToggle);
-  //   window.addEventListener("keyup", handleAudioToggle);
+  //   // window.addEventListener("keydown", handleAudioToggle);
+  //   // window.addEventListener("keyup", handleAudioToggle);
 
   //   return () => {
-  //     window.removeEventListener("keydown", handleAudioToggle);
-  //     window.removeEventListener("keyup", handleAudioToggle);
+  //     // window.removeEventListener("keydown", handleAudioToggle);
+  //     // window.removeEventListener("keyup", handleAudioToggle);
   //   };
   // }, [socket, isNearby, isUserPermission]);
 
@@ -147,10 +192,13 @@ const ArenaPage = () => {
         socket={socket}
         mobileView={mobileView}
         setIsUserPermisssion={setIsUserPermisssion}
-        offerVisible={offerVisible}
-        setOfferVisible={setOfferVisible}
+        incomingCallData={incomingCallData}
+        setIncomingCallData={setIncomingCallData}
         conversationBarVisible={conversationBarVisible}
+        handleIncomingCall={handleIncomingCall}
+        startCall={startCall}
       />
+      <audio autoPlay ref={remoteAudioElement}></audio>
     </>
   );
 };

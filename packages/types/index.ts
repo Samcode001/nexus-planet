@@ -22,6 +22,22 @@ export type SendMessage =
   | {
       type: "isTyping";
       payload: ITyping;
+    }
+  | {
+      type: "voice_ice";
+      payload: IVoiceIce;
+    }
+  | {
+      type: "voice_offer_recieved";
+      payload: IVoiceOfferRecieved;
+    }
+  | {
+      type: "voice_offer";
+      payload: IVoiceOffer;
+    }
+  | {
+      type: "voice_answer";
+      payload: IVoiceAnswer;
     };
 
 interface ITyping {
@@ -89,4 +105,26 @@ interface IConversationLastMessage {
     username: string;
   };
   content: string;
+}
+
+interface IVoiceIce {
+  candidate: RTCIceCandidate;
+  recieverId: string;
+  conversationId: string;
+}
+
+interface IVoiceOfferRecieved {
+  recieverId: string;
+  conversationId: string;
+}
+
+interface IVoiceOffer {
+  offer: any;
+  recieverId: string;
+  conversationId: string;
+}
+interface IVoiceAnswer {
+  answer: any;
+  senderId: string;
+  conversationId: string;
 }

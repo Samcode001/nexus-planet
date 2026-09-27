@@ -5,15 +5,16 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../redux/store";
 import { useEffect } from "react";
 
-const HomePagePage = () => {
+const HomePage = () => {
   const navigate = useNavigate();
-
   const dispatch = useAppDispatch();
+
   const isMobileView = useSelector(
-    (state: RootState) => state.proximity.isMobileView
+    (state: RootState) => state.proximity.isMobileView,
   );
   let borderColor = !isMobileView ? "#4b00b3" : "#250059";
   let backGroundColor = !isMobileView ? "#d6ff00" : "#ffffff";
+
   const getDeviceView = () => {
     const isTouchDevice =
       "ontouchstart" in window || navigator.maxTouchPoints > 0;
@@ -160,4 +161,4 @@ const HomePagePage = () => {
   );
 };
 
-export default HomePagePage;
+export default HomePage;

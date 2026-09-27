@@ -80,3 +80,10 @@ export interface IMessage {
   seenAt: Date | null;
   updatedAt: Date;
 }
+
+export interface IncomingCallData {
+  conversationId: string;
+  senderId: string;
+  offer: RTCSessionDescriptionInit | null;
+  showNotification: boolean;
+}

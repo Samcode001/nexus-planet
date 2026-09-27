@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignUpPage from "./pages/SignUpPage";
 import SignInPage from "./pages/SignInPage";
-import HomePage from "./pages/HomePagePage";
+import HomePage from "./pages/HomePage";
 import ControlsPage from "./pages/ControlsPage";
 import { AuthProvider } from "./auth/AuthProvider";
 import { ProtectedRoute } from "./components/ProtectedRoute";

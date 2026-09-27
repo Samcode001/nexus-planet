@@ -25,19 +25,21 @@ interface Props {
     React.SetStateAction<Record<string, boolean>>
   >;
   avatarUsername: string;
+  startCall: any;
 }
 
 const AvatarVoicePrompt = ({
   x,
   y,
   selectedOtherUserAvatar,
-  // setIsUserPermisssion,
+  setIsUserPermisssion,
   visible,
   // avatarId,
   setChatOpen,
   setSelectedOtherUserAvatar,
   setMultiplePopupsVisible,
   avatarUsername,
+  startCall,
 }: Props) => {
   const isMobileView = useSelector(
     (state: RootState) => state.proximity.isMobileView,
@@ -48,18 +50,29 @@ const AvatarVoicePrompt = ({
   const leftDevice = !isMobileView ? 50 : 20;
   const lift = visible ? liftByDevice : -10; // goes up when near, down when far
 
-  const hanldeUserClick = async (e: any) => {
+  const handleVoiceSubmit = async (e: any) => {
     e.stopPropagation();
     console.log("speak Clicked");
     setMultiplePopupsVisible((prev) => ({ ...prev, [avatarUsername]: false }));
-    // setIsUserPermisssion((prev) => ({
-    //   ...prev,
-    //   permission: !prev.permission,
-    // }));
-    // const stream = await navigator.mediaDevices.getUserMedia({
-    // audio: true,
-    // });
-    // setIsUserPermisssion((prev) => ({ ...prev, userStream: stream }));
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+
+      await startCall(stream);
+
+      setIsUserPermisssion((prev) => ({
+        ...prev,
+        permission: !prev.permission,
+      }));
+      setIsUserPermisssion((prev) => ({
+        ...prev,
+        userStream: stream,
+        userId: selectedOtherUserAvatar?.userId,
+      }));
+    } catch (error) {
+      console.log("Error on starting call", error);
+    }
   };
 
   const handleChatSubmit = async (e: any) => {
@@ -120,7 +133,7 @@ const AvatarVoicePrompt = ({
       >
         {/*  VOICE – TOP RIGHT */}
         <div
-          onClick={hanldeUserClick}
+          onClick={handleVoiceSubmit}
           style={{
             position: "absolute",
             transform: visible
