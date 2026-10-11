@@ -18,6 +18,9 @@ node_modules
 # Testing
 coverage
 
+#DOkcer
+docker-compose.local.yml
+
 # Turbo
 .turbo
 
