@@ -1,5 +1,5 @@
-// import dotenv from "dotenv";
-// dotenv.config();
+import dotenv from "dotenv";
+dotenv.config();
 import "dotenv/config";
 import express from "express";
 import { router } from "./routes/v1";
@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 const allowedOrigins = ["http://localhost:5173", "http://192.168.1.3:5173"];
-// console.log(process.env.ACCESS_TOKEN_SECRET);
+// console.log(process.env.CLIENT_ORIGIN);
 // app.use(
 //   cors({
 //     origin: process.env.CLIENT_ORIGIN,
@@ -45,5 +45,5 @@ app.use("/api/chat", chatRouter);
 // app.use(errorHandler);
 
 app.listen(process.env.PORT || 3000, () => {
-  console.log(`Server running on http://localhost:${process.env.PORT}`);
+  console.log(`Server running on ${process.env.PORT}`);
 });

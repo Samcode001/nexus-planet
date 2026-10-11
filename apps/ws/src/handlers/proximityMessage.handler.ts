@@ -5,6 +5,7 @@ const handleProximityMessage = async (
   data: any,
   ws: CustomWebsocket,
   rooms: Record<string, Set<CustomWebsocket>>,
+  HTTP_API_URL: string,
 ) => {
   // console.log(data.payload);
   const { roomId, receiverId, content, conversationId } = data;
@@ -14,7 +15,7 @@ const handleProximityMessage = async (
   if (!conversationId) isNotification = true;
   try {
     const res = await axios.post(
-      "http://localhost:3000/api/chat/message-request",
+      `${HTTP_API_URL}/chat/message-request`,
       {
         content,
         receiverId,

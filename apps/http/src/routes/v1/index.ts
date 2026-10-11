@@ -8,11 +8,12 @@ import client from "@repo/db";
 const router = express.Router();
 
 const COOKIE_NAME = "jwt";
-const ACCESS_TOKEN_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN!;
-const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN!;
+// const ACCESS_TOKEN_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN!;
+// const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN!;
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET!;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET!;
-console.log(process.env.ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET);
+const IS_ENV_LOADED = process.env.IS_ENV_LOADED;
+console.log(`Variables Loaded ${IS_ENV_LOADED}`);
 
 const refreshTokens = new Map<string, string>();
 

@@ -5,6 +5,7 @@ const handleChatMessage = async (
   data: any,
   ws: CustomWebsocket,
   conversations: Record<string, Set<CustomWebsocket>>,
+  HTTP_API_URL: string,
 ) => {
   const { content, conversationId, tempMessageId } = data;
 
@@ -15,7 +16,7 @@ const handleChatMessage = async (
 
   try {
     const res = await axios.post(
-      `http://localhost:3000/api/chat/${conversationId}/message`,
+      `${HTTP_API_URL}/chat/${conversationId}/message`,
       {
         content,
       },

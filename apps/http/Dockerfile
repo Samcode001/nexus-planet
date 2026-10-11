@@ -20,8 +20,8 @@ COPY turbo.json .
 COPY packages/db packages/db
 COPY apps/http apps/http
 
-# Prisma build-time env
-ENV DATABASE_URL="file:./dev.db"
+# Prisma build-time env placeholder
+ENV DATABASE_URL="postgresql://user:password@localhost:5432/placeholder"
 
 # Install deps
 RUN pnpm install

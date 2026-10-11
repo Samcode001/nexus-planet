@@ -11,7 +11,7 @@ const usePeerConnection = (
   pcRef: React.RefObject<RTCPeerConnection | null>,
   remoteAudioElement: React.RefObject<HTMLAudioElement | null>,
 ) => {
-  const micTrackRef = useRef<MediaStreamTrack | null>(null);
+  // const micTrackRef = useRef<MediaStreamTrack | null>(null);
   // const audioInitializeRef = useRef<boolean>(false);
   // const audioSenderRef = useRef<RTCRtpSender | null>(null);
   const localStream = useRef<MediaStream | null>(null);

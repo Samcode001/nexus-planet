@@ -21,21 +21,26 @@ const wss = new WebSocketServer({
 const rooms: Record<string, Set<CustomWebsocket>> = {};
 const conversations: Record<string, Set<CustomWebsocket>> = {};
 
+const HTTP_API_URL = process.env.HTTP_API_URL || "http://localhost:3000/api";
+
 wss.on("connection", async (ws: CustomWebsocket, req: Request) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const token = url.searchParams.get("token");
-
   try {
-    const { data: userData } = await axios.get(
-      "http://localhost:3000/api/user",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const token = url.searchParams.get("token");
 
-    if (!userData) return console.log("Error on loading user data");
+    if (!token) return ws.close(1008, "Missing authentication token");
+
+    const { data: userData } = await axios.get(`${HTTP_API_URL}/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!userData) {
+      console.log("error on loading user");
+      ws.close(1008, "Authentication Failed");
+      return;
+    }
 
     ws.userId = userData.userId;
     ws.username = userData.username;
@@ -54,6 +59,8 @@ wss.on("connection", async (ws: CustomWebsocket, req: Request) => {
     // console.log("conversations", data.conversations);
   } catch (error) {
     console.log("error on loading user", error);
+    ws.close(1008, "Authentication Failed");
+    return;
   }
 
   ws.on("message", async (rawData) => {
@@ -78,11 +85,11 @@ wss.on("connection", async (ws: CustomWebsocket, req: Request) => {
     }
 
     if (data.type === "chat_message") {
-      handleChatMessage(data.payload, ws, conversations);
+      handleChatMessage(data.payload, ws, conversations, HTTP_API_URL);
     }
 
     if (data.type === "proximity_message") {
-      handleProximityMessage(data.payload, ws, rooms);
+      handleProximityMessage(data.payload, ws, rooms, HTTP_API_URL);
     }
 
     if (data.type === "move_avatar") {
@@ -188,6 +195,10 @@ wss.on("connection", async (ws: CustomWebsocket, req: Request) => {
       );
     });
   });
+});
+
+app.get("/health", (req, res) => {
+  res.send(`<h1>Socket Healthy</h1>`);
 });
 
 server.listen(8080, () => {
